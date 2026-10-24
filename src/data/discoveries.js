@@ -1,0 +1,68 @@
+// ♣ Natural Formations (pp. 19–20) and ♠ Remnants (pp. 21–22), with the book's wording.
+// `implemented: true` entries are fully handled by the engine; others are, for now,
+// resolved as the stand-in noted in `standIn` (vertical slice), and the chronicle says so.
+
+export const CLUBS = {
+  A: { name: 'Underground forest', page: 19, implemented: false,
+    text: 'If depth 1–4: an underground forest. Cut down for a free room, or keep for 2♥ per turn. If depth 5+: consult the Wyrd table (pages 29 – 30).' },
+  2: { name: 'Gas-filled chamber', page: 19, implemented: false,
+    text: 'Gas-filled chamber. Roll 1D4: 1 — Poison gas: instantly defeats units in affected grid spaces 2 — Flammable gas: explodes if lit, damages rooms and defeats units 3 or 4 — Blinding gas: blocks Ranged.' },
+  3: { name: 'Natural magic', page: 19, implemented: false,
+    text: 'Natural magic in cave plants, crystals, or the air itself. Roll 1D2: 1 — Draw a card and consult the Good Magic table (pages 25 – 26). 2 — Draw a card and consult the Bad Magic table (page 27 – 28).' },
+  4: { name: 'Underground river', page: 19, implemented: false,
+    text: 'An underground river. Draw the river all the way to the closest page edge. Liquid.' },
+  5: { name: 'Cavern', page: 19, implemented: true, size: '1D4',
+    text: 'Cavern. 1D4 grid spaces in size.' },
+  6: { name: 'Crystal cavern', page: 19, implemented: false,
+    text: 'Crystal cavern. 1D2 grid spaces in size. At the start of each turn, draw a card before exploring. Gain ♦ equal to its value + cavern’s depth. If the A♦ is drawn, the cavern is destroyed. The grid space cannot be built in but can be passed.' },
+  7: { name: 'Magma flow', page: 19, implemented: false,
+    text: 'Magma flow. Same as the underground river above (4♣), but most likely doesn’t have fish. Liquid.' },
+  8: { name: 'Underground lake', page: 20, implemented: false,
+    text: 'Underground lake, thankfully monsterless. 1D4 grid spaces. Liquid.' },
+  9: { name: 'Hive', page: 20, implemented: false,
+    text: 'A hive of creatures! 1D2 grid spaces in size. Creatures’ STR is equal to hive size x 10. See page 42 for creature prompts.' },
+  10: { name: 'Volcanic shaft', page: 20, implemented: false,
+    text: 'Volcanic shaft, dormant...for now. Draw this all the way down to the bottom of the page.' },
+  J: { name: 'Small creature', page: 20, implemented: false,
+    text: 'Cavern housing a small, tamable creature (10 STR). Attacks the nearest room, then retreats back to its home cavern, ending combat unless you wish to follow and attack.' },
+  Q: { name: 'Large creature', page: 20, implemented: false,
+    text: 'Environment suitable for a large creature (40 STR). Four grid spaces. Creature will not leave here unless attacked but will attack anything entering its lair.' },
+  K: { name: 'Burrowing beast', page: 20, implemented: false,
+    text: 'Burrowing beast (20 STR). Digs a tunnel straight up from this space. When it reaches one of your rooms, combat starts and it moves normally towards the Entrance. Can be tamed, does not burrow' },
+};
+
+export const SPADES = {
+  A: { name: 'Monster village', page: 21, implemented: false,
+    text: 'Monster village. 1D4 grid spaces in size. Monsters’ STR is equal to the village size x 10. If monsters enter a room with no units in it, lose 10♦ as they break and steal what they can. Ideas for monsters can be found on page 42.' },
+  2: { name: 'Forgotten crypt', page: 21, implemented: true,
+    enemy: { name: 'Undead', str: 20 }, clearedRoom: 'crypt',
+    text: 'Forgotten crypts, containing 20 STR of undead. Once cleared, you may summon Skull Dwarves (1 STR) here for 5♦. Crypts can house 20 Skull Dwarves.' },
+  3: { name: 'Wishing well', page: 21, implemented: false,
+    text: 'Wishing well. Once per turn, you may pay 10♦ to roll 1D2 and draw a card: On 1, consult Good Magic (pages 25 – 26). On 2, consult Bad Magic (pages 27 – 28).' },
+  4: { name: 'Sealed room', page: 21, implemented: false,
+    text: 'A sealed room with an evil creature or object inside. If this room is opened, draw a card. Consult the Bad Magic table (pages 27 – 28) to determine what you find.' },
+  5: { name: 'Abandoned mine', page: 21, implemented: false,
+    text: 'Abandoned mine. 1D2 grid spaces in size. Others have left behind their haul. More for us! Gain 20♦, plus 2♦ multiplied by the depth of this room.' },
+  6: { name: 'Buried temple', page: 21, implemented: false,
+    text: 'Buried temple. Recruit a cleric here to Roll 1D4 and draw a card. On 1–3, consult Bad Magic (page 25 – 26). On 4, consult Good Magic (page 27 – 28). Usable once.' },
+  7: { name: 'Abandoned room', page: 21, implemented: false,
+    text: 'An abandoned room. Looks like you weren’t the first...choose a room and place it here.' },
+  8: { name: 'Ancient library', page: 22, implemented: false,
+    text: 'Ancient library. 1D2 grid spaces in size. For the knowledge contained herein, roll 1D2 and draw a card: On 1, consult Good Magic (pages 25 – 26); On 2, consult Bad Magic (pages 27 – 28).' },
+  9: { name: 'Demon portal', page: 22, implemented: false,
+    text: 'Demon portal. Roll 1D4 at the end of each turn. On 1, spawn Demons with 20 STR. To destroy the portal, pay 20♦ and sacrifice one of your Clerics, killing them.' },
+  10: { name: 'Golem forge', page: 22, implemented: false,
+    text: 'Golem forge, with 40 STR of Golems, who won’t attack unless you try to claim the room. If the Golems are defeated, this room allows you to recruit Golems at Forges.' },
+  J: { name: 'Long lost artefact', page: 22, implemented: false,
+    text: 'Long lost artefact. Ancient magical weapon or armour. Choose a unit room to house this artefact, it adds +15 STR to any Troop housed there.' },
+  Q: { name: 'Slumbering Wyrm', page: 22, implemented: false,
+    text: 'Slumbering Wyrm. An ancient dragon sleeps upon its hoard. Once per turn, you may steal 20♦, and roll 1D4. On 1, the Wyrm awakens, destroying the hoard. The Wyrm has 100 STR and Ranged, and rooms it attacks through are damaged.' },
+  K: { name: 'Desolate court', page: 22, implemented: false,
+    text: 'The desolate halls of a lich king, a vampire queen’s coterie, or a skeletal court:1D4 + 2 grid spaces in size. Enemy STR equal to room size x 20.' },
+};
+
+// Vertical-slice stand-ins for entries not yet implemented.
+export const SLICE_STAND_INS = {
+  C: { suitRank: '5', note: 'not yet built into the game; drawn as a plain cavern for now' },
+  S: { suitRank: '2', note: 'not yet built into the game; treated as a Forgotten Crypt for now' },
+};

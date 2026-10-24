@@ -1,0 +1,15 @@
+{
+  "name": "delve-browser",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A browser companion for DELVE: A Solo Map-Drawing Game by Anna Blackwell. Family use only.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test test/*.test.js",
+    "check": "node --test test/*.test.js && node build.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.0"
+  }
+}

@@ -1,0 +1,2 @@
+Metamorphous (Sorkin Type) and Alegreya (Huerta Tipográfica) are licensed under the SIL Open Font
+License 1.1 (https://openfontlicense.org). Latin subsets from Google Fonts, embedded by build.mjs.
