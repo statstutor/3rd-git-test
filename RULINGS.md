@@ -228,6 +228,103 @@ down as far as possible."
 **R30. Gas** is the mirror of R29: 2 nearest open squares, then up as far as it can
 go, and it "always spreads, regardless of how you discover it" (p. 9).
 
+## ♣ and ♠ discoveries (added in 0.2)
+
+**R34. Rivers and magma run sideways.** [Claude] p. 19: "Draw the river all the way to the
+closest page edge." The river runs left or right along its row to the nearer side edge of
+its page. If both are equally close, 1D2 decides (1 left, 2 right). It carves through rock
+and stops at any square already explored.
+
+**R35. Who can cross what.** [Claude]
+- **Dwarves** can't enter liquid, poison gas or flammable gas, or a sealed room, until
+  it's drained or opened. That's what p. 5 means by "a flooded layer" making rooms
+  disconnected.
+- **Enemies** wade through water and walk through gas, but can't cross lava or a sealed
+  room.
+- A **Corridor** built on water bridges it (p. 9: "The only rooms that can be built on
+  water are Corridors and Drawbridges").
+
+**R36. Which gases kill.** [Claude] p. 9 says "Units in rooms affected by liquid or gas are
+immediately defeated", but the 2♣ entry gives each gas its own effect. The specific entry
+wins:
+- **Poison** kills the units housed in every square it reaches.
+- **Flammable** kills only when it explodes (p. 9: "explodes if it reaches a forge, inn, or
+  barracks"). It then burns away, and every room it filled is damaged.
+- **Blinding** harms no one; it blocks Ranged shots into, out of or within it.
+
+Golems are immune to liquid and gas (p. 6).
+
+**R37. Flooded and gassed squares** can't be built on or explored from until drained. Each
+square is drained separately: 5♦, or 20♦ for lava, which leaves a room damaged (p. 5).
+
+**R38. Gas from a 2♣** fills the chamber itself, then the nearest 2 open squares (moving
+sideways or up), then rises through links as far as it can (p. 43).
+
+**R39. Lairs.** [Claude] Every find with foes is a lair: red-hatched squares on the map,
+with the foe's STR kept between fights. When its foes die, the lair becomes part of your
+hold: a crypt (2♠), a golem forge (10♠), an empty hoard (Q♠), or an empty cavern for
+everything else. Lairs can't be built on or explored from.
+
+**R40. The small creature (J♣)** heads for the nearest room square (any built or found room,
+or the Entrance), counted by its own route. Once it gets there, it turns back to its den.
+When it's home it leaves the fight, keeping its current STR. If it was the only foe,
+combat ends, as the book says. You can attack its den later from the hold's list of
+places. A raider never "escapes" through the Entrance. Taming needs a Kennel (not built
+yet).
+
+**R41. The Wyrm (Q♠)** sleeps until you steal (1 on 1D4) or attack it. Awake, it marches on
+the Entrance with Ranged: on its move, if a Troop is within 2 steps, it fires at the
+strongest Troop instead of moving. p. 22: "rooms it attacks through are damaged". Every
+room on the line of fire, the target's included, is damaged.
+
+**R42. Monster villages (A♠)** steal 10♦ each time they enter a room square where none of
+your Troops stands.
+
+**R43. A Long lost artefact (J♠)** adds +15 to the STR of each Troop from its room.
+Damage eats into the bonus before any dwarf falls (in your favour, R13).
+
+**R44. Withdrawing.** [Claude] When no foe is marching on the Entrance by a route it can
+use, and no Troop is locked in a fight, you may withdraw. Foes stay in their lairs with
+the STR they have left. This covers attacking a guardian lair (Q♣, 10♠) and then thinking
+better of it.
+
+**R45. Underground forest (A♣).** "Cut down for a free room, or keep for 2♥ per turn":
+- Building a room on a forest square costs nothing, and still uses your room for the turn.
+- Each connected forest square gives +2♥ at the start of every turn.
+- At depth 5 or deeper the card goes to the Wyrd table instead.
+
+**R46. Demon portals (9♠)** roll at the end of every turn. Demons spawn on the portal square,
+and the fight happens before the next turn begins. Closing a portal costs 20♦ and a
+Cleric (for now, the only Clerics come from Buried temples).
+
+**R47. Crystal caverns (6♣)** each draw one card at the start of every turn: ♦ = the card's
+value + the depth of the cavern's top square. The A♦ shatters the cavern into an empty
+one. A Joker drawn here is redrawn.
+
+**R48. Nowhere left to dig.** [Claude] If water, lava, gas or lairs leave no square to explore,
+you may carry on without drawing. The book always assumes you can dig.
+
+**R49. The burrowing beast (K♣)** digs its whole tunnel the moment it's found. It goes
+straight up until it meets an explored square. If it reaches the top row first, it turns
+into the next column (1D2: 1 left, 2 right) and digs down until it meets one. Combat
+starts as it breaks in. If it finds nothing before the bottom of the page, it lies still.
+
+**R50. Multi-space lairs** (A♠, K♠, 9♣, Q♣) are shaped like other multi-space finds (R6).
+Their foes fight as one group from the square you explored.
+
+**R51. Magic and Wyrd draws.** Wells, libraries, sealed rooms, buried temples and natural
+magic all draw the card and show the entry. **Their effects aren't automated yet**; you
+apply them by hand. They'll be automated in the magic stage, as agreed.
+
+**R52. The Wishing well, the Wyrm's hoard** and other "once per turn" places can each be
+used once per turn, each well and each Wyrm separately.
+
+**R53. The Buried temple (6♠)** recruits one Cleric (8♦), who stays housed there. That
+Cleric counts for closing a portal.
+
+**R54. The Abandoned room (7♠)** may become any room the game can currently build, free. It
+doesn't use your room for the turn and doesn't score (R31).
+
 ## Scoring & game end
 
 **R31. Score.** [Family] Not in the book; our table's formula:

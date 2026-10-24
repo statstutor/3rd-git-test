@@ -32,7 +32,7 @@ export const UNITS = {
   },
   golem: {
     name: 'Golem', plural: 'Golems', str: 7, cost: { diamonds: 15 },
-    power: 'Immune to liquid and gas', implemented: false,
+    power: 'Immune to liquid and gas', immuneToFlow: true, implemented: false,
   },
   cannon: {
     name: 'Cannon', plural: 'Cannons', str: 30, cost: { diamonds: 30 },
@@ -40,6 +40,6 @@ export const UNITS = {
   },
   skullDwarf: {
     name: 'Skull Dwarf', plural: 'Skull Dwarves', str: 1, cost: { diamonds: 5 },
-    power: 'On defeat, roll 1D4: 3+ revive after combat', implemented: false,
+    power: 'On defeat, roll 1D4: 3+ revive after combat', implemented: true,
   },
 };

@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, apply, buildableSquares, housingFor } from '../src/engine/game.js';
+import { newGame, apply, buildableSquares, housingFor, chooseOptions, holdActions } from '../src/engine/game.js';
 import { GameError } from '../src/engine/errors.js';
 import { explorableSquares, parseKey } from '../src/engine/grid.js';
-import { legalTroopMoves } from '../src/engine/combat.js';
+import { legalTroopMoves, canWithdraw } from '../src/engine/combat.js';
 
 // Plays many seeded games with a simple random overseer. Rule refusals (GameError) are fine;
 // anything else is a bug. Also checks invariants after every action.
@@ -21,27 +21,34 @@ function invariants(s) {
 
 test('300 random games run without engine errors', () => {
   let falls = 0;
+  const seen = new Set();
   let fights = 0;
   for (let g = 0; g < 300; g++) {
     const r = rnd(g + 1);
     let s = newGame({ seed: g * 7919 + 1 });
     for (let step = 0; step < 400 && !s.over; step++) {
       let action;
-      if (s.phase === 'explore') {
+      if (s.pending) {
+        const o = chooseOptions(s);
+        action = { type: 'choose', option: o[Math.floor(r() * o.length)].id };
+      } else if (s.phase === 'explore') {
         const opts = explorableSquares(s);
         const p = opts[Math.floor(r() * opts.length)];
-        action = { type: 'explore', x: p.x, y: p.y };
+        action = p ? { type: 'explore', x: p.x, y: p.y } : { type: 'skipExplore' };
       } else if (s.phase === 'combat') {
         fights += s.combat.round === 1 ? 1 : 0;
         const t = s.combat.troops.find((x) => !x.acted && legalTroopMoves(s, x).length);
-        if (t && r() < 0.7) {
+        if (canWithdraw(s) && r() < 0.3) action = { type: 'withdraw' };
+        else if (t && r() < 0.7) {
           const m = legalTroopMoves(s, t);
           const p = m[Math.floor(r() * m.length)];
           action = { type: 'moveTroop', troopId: t.id, x: p.x, y: p.y };
         } else action = { type: 'endRound' };
       } else {
         const roll = r();
-        if (roll < 0.15) action = { type: 'trade', give: r() < 0.5 ? 'hearts' : 'diamonds', amount: 2 };
+        const extras = holdActions(s).filter((a) => !a.disabled);
+        if (extras.length && roll < 0.1) { const a = extras[Math.floor(r() * extras.length)]; action = { type: a.type, x: a.x, y: a.y }; }
+        else if (roll < 0.15) action = { type: 'trade', give: r() < 0.5 ? 'hearts' : 'diamonds', amount: 2 };
         else if (roll < 0.45) {
           const room = ['corridor', 'stairs', 'barracks'][Math.floor(r() * 3)];
           const opts = buildableSquares(s, room);
@@ -60,9 +67,11 @@ test('300 random games run without engine errors', () => {
         if (s.phase !== 'explore' && s.phase !== 'combat') s = apply(s, { type: 'endTurn' });
       }
       invariants(s);
+      if (action.type === 'explore' && s.lastCard) seen.add(s.lastCard.id);
     }
     if (s.over) falls++;
   }
+  assert.ok(seen.size > 40, `expected most cards to come up, saw ${seen.size}`);
   assert.ok(fights > 50, `expected plenty of fights, saw ${fights}`);
   assert.ok(falls > 0, 'some random overseers should lose their hold');
 });

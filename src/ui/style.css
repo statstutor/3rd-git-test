@@ -34,7 +34,7 @@ body {
 #map { width: 100%; height: 100%; display: block; cursor: crosshair; touch-action: none; user-select: none; }
 #map.panning { cursor: grabbing; }
 #map .depth-n { font: 20px var(--display); fill: var(--ink); }
-#map .depth-h { font: 13px var(--display); fill: var(--ink-soft); }
+#map .depth-h { font: 11px var(--display); fill: var(--ink-soft); }
 #map .tok-n { font: bold 11px var(--body); fill: var(--floor); }
 #map .tok-s { font: 8.5px var(--body); fill: var(--floor); }
 #map .tok-e { font: bold 10px var(--body); fill: var(--floor); }
@@ -218,3 +218,13 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
   box-shadow: 4px 5px 0 var(--ink); padding: 14px 18px;
 }
 #nojs p { margin: 6px 0; }
+
+.places { display: flex; flex-direction: column; gap: 5px; }
+.place { text-align: left; }
+.place small, .choice small { color: var(--ink-soft); margin-left: 4px; }
+button.wide { display: block; width: 100%; margin-top: 6px; }
+.extra-draw { display: flex; gap: 12px; align-items: flex-start; margin-top: 10px; padding-top: 10px; border-top: 1.5px dashed var(--stone-dark); }
+.playing-card.small { width: 40px; height: 56px; font-size: 17px; }
+.playing-card.small .pip { font-size: 19px; }
+#card { flex-wrap: wrap; }
+#card > .extra-draw { flex-basis: 100%; }

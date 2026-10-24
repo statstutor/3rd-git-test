@@ -35,7 +35,7 @@ test('a Barracks costs 8♥ and can go on an empty cavern', () => {
 test('rooms cost what the book says and you cannot overspend', () => {
   let s = afterExplore();
   s.res.hearts = 7;
-  assert.throws(() => act(s, { type: 'build', x: 4, y: 0, room: 'barracks' }), /afford/);
+  assert.throws(() => act(s, { type: 'build', x: 4, y: 0, room: 'barracks' }), /need 8♥/);
 });
 
 test('Corridors go sideways, Stairs go below (p. 11, R27)', () => {

@@ -35,23 +35,46 @@ export function setLink(state, x, yUpper, type) {
   state.links[linkKey(x, yUpper)] = type;
 }
 
+const BLOCKING_GAS = { poison: true, flammable: true };
+
+export function isWet(cell) {
+  return !!(cell && (cell.flooded || cell.liquid));
+}
+
 // A square of "your hold": somewhere you can explore and build from (R7).
 export function isHoldCell(cell) {
   if (!cell) return false;
-  if (cell.flooded) return false;
+  if (isWet(cell) || BLOCKING_GAS[cell.gas] || cell.closed) return false;
   return cell.type === 'entrance' || cell.type === 'room' || cell.type === 'cavern';
 }
 
-// Squares dwarves can walk through (R9).
+// Squares dwarves can walk through (R9, R35): not liquid, not choking gas, not sealed.
 export function isPassableForDwarves(cell) {
   if (!cell) return false;
-  if (cell.flooded) return false;
+  if (isWet(cell) || BLOCKING_GAS[cell.gas] || cell.closed) return false;
   return true;
 }
 
-// Squares enemies can walk through.
+// Squares enemies can walk through (R35): anything open except lava and sealed rooms.
 export function isPassableForEnemies(cell) {
-  return !!cell;
+  if (!cell) return false;
+  return cell.liquid !== 'lava' && !cell.closed;
+}
+
+// Raw connections, ignoring who can pass: for liquid and gas flowing (R29, R30).
+// dirs: which of 'side', 'down', 'up' to follow.
+export function openNeighbours(state, x, y, dirs) {
+  const out = [];
+  for (const d of DIRS) {
+    const kind = d.dy === 0 ? 'side' : d.dy > 0 ? 'down' : 'up';
+    if (!dirs.includes(kind)) continue;
+    const nx = x + d.dx;
+    const ny = y + d.dy;
+    if (!getCell(state, nx, ny)) continue;
+    if (d.dy !== 0 && !getLink(state, x, y, ny)) continue;
+    out.push({ x: nx, y: ny, kind });
+  }
+  return out;
 }
 
 // Orthogonal neighbours connected to (x, y). `mode` is 'dwarf' or 'enemy'.

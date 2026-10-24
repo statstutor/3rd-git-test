@@ -45,7 +45,7 @@ body {
 #map { width: 100%; height: 100%; display: block; cursor: crosshair; touch-action: none; user-select: none; }
 #map.panning { cursor: grabbing; }
 #map .depth-n { font: 20px var(--display); fill: var(--ink); }
-#map .depth-h { font: 13px var(--display); fill: var(--ink-soft); }
+#map .depth-h { font: 11px var(--display); fill: var(--ink-soft); }
 #map .tok-n { font: bold 11px var(--body); fill: var(--floor); }
 #map .tok-s { font: 8.5px var(--body); fill: var(--floor); }
 #map .tok-e { font: bold 10px var(--body); fill: var(--floor); }
@@ -229,6 +229,16 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
   box-shadow: 4px 5px 0 var(--ink); padding: 14px 18px;
 }
 #nojs p { margin: 6px 0; }
+
+.places { display: flex; flex-direction: column; gap: 5px; }
+.place { text-align: left; }
+.place small, .choice small { color: var(--ink-soft); margin-left: 4px; }
+button.wide { display: block; width: 100%; margin-top: 6px; }
+.extra-draw { display: flex; gap: 12px; align-items: flex-start; margin-top: 10px; padding-top: 10px; border-top: 1.5px dashed var(--stone-dark); }
+.playing-card.small { width: 40px; height: 56px; font-size: 17px; }
+.playing-card.small .pip { font-size: 19px; }
+#card { flex-wrap: wrap; }
+#card > .extra-draw { flex-basis: 100%; }
 </style>
 </head>
 <body>
@@ -253,7 +263,7 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     <header>
       <h1>Delve</h1>
       <p class="sub">A Solo Map-Drawing Game · by Anna Blackwell</p>
-      <p class="version">Family edition · version 0.1.3</p>
+      <p class="version">Family edition · version 0.2.0</p>
     </header>
     <div id="status"></div>
     <ol id="tracker"></ol>
@@ -614,7 +624,78 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       page: 21,
       houses: { units: ["skullDwarf"], capacity: 20 },
       text: "Forgotten crypts, containing 20 STR of undead. Once cleared, you may summon Skull Dwarves (1 STR) here for 5\u2666. Crypts can house 20 Skull Dwarves."
+    },
+    forest: {
+      name: "Underground forest",
+      page: 19,
+      text: "An underground forest. Cut down for a free room, or keep for 2\u2665 per turn."
+    },
+    well: {
+      name: "Wishing well",
+      page: 21,
+      text: "Wishing well. Once per turn, you may pay 10\u2666 to roll 1D2 and draw a card: On 1, consult Good Magic (pages 25 \u2013 26). On 2, consult Bad Magic (pages 27 \u2013 28)."
+    },
+    sealed: {
+      name: "Sealed room",
+      page: 21,
+      closed: true,
+      text: "A sealed room with an evil creature or object inside. If this room is opened, draw a card. Consult the Bad Magic table (pages 27 \u2013 28) to determine what you find."
+    },
+    openedRoom: {
+      name: "Opened room",
+      page: 21,
+      text: "The sealed room, now broken open."
+    },
+    buriedTemple: {
+      name: "Buried temple",
+      page: 21,
+      houses: { units: ["cleric"], capacity: 1 },
+      text: "Buried temple. Recruit a cleric here to Roll 1D4 and draw a card. On 1\u20133, consult Bad Magic. On 4, consult Good Magic. Usable once."
+    },
+    ancientLibrary: {
+      name: "Ancient library",
+      page: 22,
+      text: "Ancient library. For the knowledge contained herein, roll 1D2 and draw a card: On 1, consult Good Magic (pages 25 \u2013 26); On 2, consult Bad Magic (pages 27 \u2013 28)."
+    },
+    portal: {
+      name: "Demon portal",
+      page: 22,
+      text: "Demon portal. Roll 1D4 at the end of each turn. On 1, spawn Demons with 20 STR. To destroy the portal, pay 20\u2666 and sacrifice one of your Clerics, killing them."
+    },
+    golemForge: {
+      name: "Golem forge",
+      page: 22,
+      text: "If the Golems are defeated, this room allows you to recruit Golems at Forges."
+    },
+    hoard: {
+      name: "Wyrm\u2019s hoard",
+      page: 22,
+      text: "Slumbering Wyrm. An ancient dragon sleeps upon its hoard. Once per turn, you may steal 20\u2666, and roll 1D4. On 1, the Wyrm awakens, destroying the hoard. The Wyrm has 100 STR and Ranged, and rooms it attacks through are damaged."
+    },
+    emptyHoard: {
+      name: "Empty hoard",
+      page: 22,
+      text: "The Wyrm\u2019s lair, its hoard gone."
     }
+  };
+  var FEATURES = {
+    cave: { name: "Empty cavern", page: 3, text: "An empty cavern: a place to build." },
+    mine: { name: "Abandoned mine", page: 21, text: "Abandoned mine. Others have left behind their haul. More for us!" },
+    tunnel: { name: "Burrowed tunnel", page: 9, text: "The path a burrowing creature takes is opened up, update your map with the burrowed tunnel." },
+    volcanic: { name: "Volcanic shaft", page: 20, text: "Volcanic shaft, dormant...for now. Draw this all the way down to the bottom of the page." },
+    river: { name: "Underground river", page: 19, text: "An underground river. Draw the river all the way to the closest page edge. Liquid." },
+    magma: { name: "Magma flow", page: 19, text: "Magma flow. Same as the underground river above (4\u2663), but most likely doesn\u2019t have fish. Liquid." },
+    lake: { name: "Underground lake", page: 20, text: "Underground lake, thankfully monsterless. Liquid." },
+    gasChamber: { name: "Gas-filled chamber", page: 19, text: "Gas-filled chamber." },
+    grotto: { name: "Natural magic", page: 19, text: "Natural magic in cave plants, crystals, or the air itself." },
+    ruins: { name: "Cleared lair", page: 21, text: "Where foes once dwelt; now part of your hold." },
+    wyrd: { name: "Wyrd cavern", page: 29, text: "Something strange from the Wyrd table (pages 29 \u2013 30)." },
+    crystal: { name: "Crystal cavern", page: 19, text: "Crystal cavern. At the start of each turn, draw a card before exploring. Gain \u2666 equal to its value + cavern\u2019s depth. If the A\u2666 is drawn, the cavern is destroyed. The grid space cannot be built in but can be passed." }
+  };
+  var GASES = {
+    poison: { name: "Poison gas", text: "Poison gas: instantly defeats units in affected grid spaces." },
+    flammable: { name: "Flammable gas", text: "Flammable gas: explodes if lit, damages rooms and defeats units. Flammable gas explodes if it reaches a forge, inn, or barracks." },
+    blinding: { name: "Blinding gas", text: "Blinding gas: blocks Ranged." }
   };
 
   // src/data/units.js
@@ -684,6 +765,7 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       str: 7,
       cost: { diamonds: 15 },
       power: "Immune to liquid and gas",
+      immuneToFlow: true,
       implemented: false
     },
     cannon: {
@@ -702,7 +784,7 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       str: 1,
       cost: { diamonds: 5 },
       power: "On defeat, roll 1D4: 3+ revive after combat",
-      implemented: false
+      implemented: true
     }
   };
 
@@ -711,80 +793,106 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     A: {
       name: "Underground forest",
       page: 19,
-      implemented: false,
+      kind: "forest",
+      incomePerTurn: { hearts: 2 },
+      wyrdFromDepth: 5,
       text: "If depth 1\u20134: an underground forest. Cut down for a free room, or keep for 2\u2665 per turn. If depth 5+: consult the Wyrd table (pages 29 \u2013 30)."
     },
     2: {
       name: "Gas-filled chamber",
       page: 19,
-      implemented: false,
+      kind: "gas",
+      byRoll: { 1: "poison", 2: "flammable", 3: "blinding", 4: "blinding" },
       text: "Gas-filled chamber. Roll 1D4: 1 \u2014 Poison gas: instantly defeats units in affected grid spaces 2 \u2014 Flammable gas: explodes if lit, damages rooms and defeats units 3 or 4 \u2014 Blinding gas: blocks Ranged."
     },
     3: {
       name: "Natural magic",
       page: 19,
-      implemented: false,
+      kind: "naturalMagic",
       text: "Natural magic in cave plants, crystals, or the air itself. Roll 1D2: 1 \u2014 Draw a card and consult the Good Magic table (pages 25 \u2013 26). 2 \u2014 Draw a card and consult the Bad Magic table (page 27 \u2013 28)."
     },
     4: {
       name: "Underground river",
       page: 19,
-      implemented: false,
+      kind: "river",
+      liquid: "water",
       text: "An underground river. Draw the river all the way to the closest page edge. Liquid."
     },
     5: {
       name: "Cavern",
       page: 19,
-      implemented: true,
+      kind: "cavern",
       size: "1D4",
       text: "Cavern. 1D4 grid spaces in size."
     },
     6: {
       name: "Crystal cavern",
       page: 19,
-      implemented: false,
+      kind: "crystal",
+      size: "1D2",
       text: "Crystal cavern. 1D2 grid spaces in size. At the start of each turn, draw a card before exploring. Gain \u2666 equal to its value + cavern\u2019s depth. If the A\u2666 is drawn, the cavern is destroyed. The grid space cannot be built in but can be passed."
     },
     7: {
       name: "Magma flow",
       page: 19,
-      implemented: false,
+      kind: "river",
+      liquid: "lava",
       text: "Magma flow. Same as the underground river above (4\u2663), but most likely doesn\u2019t have fish. Liquid."
     },
     8: {
       name: "Underground lake",
       page: 20,
-      implemented: false,
+      kind: "lake",
+      size: "1D4",
+      liquid: "water",
       text: "Underground lake, thankfully monsterless. 1D4 grid spaces. Liquid."
     },
     9: {
       name: "Hive",
       page: 20,
-      implemented: false,
+      kind: "lair",
+      size: "1D2",
+      strPerSpace: 10,
+      prompt: "hive",
+      behaviour: "march",
       text: "A hive of creatures! 1D2 grid spaces in size. Creatures\u2019 STR is equal to hive size x 10. See page 42 for creature prompts."
     },
     10: {
       name: "Volcanic shaft",
       page: 20,
-      implemented: false,
+      kind: "volcanicShaft",
       text: "Volcanic shaft, dormant...for now. Draw this all the way down to the bottom of the page."
     },
     J: {
       name: "Small creature",
       page: 20,
-      implemented: false,
+      kind: "lair",
+      size: 1,
+      str: 10,
+      prompt: "small",
+      behaviour: "raid",
+      tamable: true,
       text: "Cavern housing a small, tamable creature (10 STR). Attacks the nearest room, then retreats back to its home cavern, ending combat unless you wish to follow and attack."
     },
     Q: {
       name: "Large creature",
       page: 20,
-      implemented: false,
+      kind: "lair",
+      size: 4,
+      str: 40,
+      prompt: "large",
+      behaviour: "guard",
+      leavesWhenAttacked: true,
+      waits: true,
       text: "Environment suitable for a large creature (40 STR). Four grid spaces. Creature will not leave here unless attacked but will attack anything entering its lair."
     },
     K: {
       name: "Burrowing beast",
       page: 20,
-      implemented: false,
+      kind: "burrower",
+      str: 20,
+      prompt: "burrower",
+      tamable: true,
       text: "Burrowing beast (20 STR). Digs a tunnel straight up from this space. When it reaches one of your rooms, combat starts and it moves normally towards the Entrance. Can be tamed, does not burrow"
     }
   };
@@ -792,87 +900,118 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     A: {
       name: "Monster village",
       page: 21,
-      implemented: false,
+      kind: "lair",
+      size: "1D4",
+      strPerSpace: 10,
+      prompt: "village",
+      behaviour: "march",
+      stealsFromEmptyRooms: 10,
       text: "Monster village. 1D4 grid spaces in size. Monsters\u2019 STR is equal to the village size x 10. If monsters enter a room with no units in it, lose 10\u2666 as they break and steal what they can. Ideas for monsters can be found on page 42."
     },
     2: {
       name: "Forgotten crypt",
       page: 21,
-      implemented: true,
-      enemy: { name: "Undead", str: 20 },
-      clearedRoom: "crypt",
+      kind: "lair",
+      size: 1,
+      str: 20,
+      foe: "Undead",
+      behaviour: "march",
+      clearsTo: "crypt",
       text: "Forgotten crypts, containing 20 STR of undead. Once cleared, you may summon Skull Dwarves (1 STR) here for 5\u2666. Crypts can house 20 Skull Dwarves."
     },
     3: {
       name: "Wishing well",
       page: 21,
-      implemented: false,
+      kind: "foundRoom",
+      room: "well",
+      useCost: { diamonds: 10 },
       text: "Wishing well. Once per turn, you may pay 10\u2666 to roll 1D2 and draw a card: On 1, consult Good Magic (pages 25 \u2013 26). On 2, consult Bad Magic (pages 27 \u2013 28)."
     },
     4: {
       name: "Sealed room",
       page: 21,
-      implemented: false,
+      kind: "foundRoom",
+      room: "sealed",
+      prompt: "trappedEvil",
       text: "A sealed room with an evil creature or object inside. If this room is opened, draw a card. Consult the Bad Magic table (pages 27 \u2013 28) to determine what you find."
     },
     5: {
       name: "Abandoned mine",
       page: 21,
-      implemented: false,
+      kind: "mine",
+      size: "1D2",
+      haul: 20,
+      haulPerDepth: 2,
       text: "Abandoned mine. 1D2 grid spaces in size. Others have left behind their haul. More for us! Gain 20\u2666, plus 2\u2666 multiplied by the depth of this room."
     },
     6: {
       name: "Buried temple",
       page: 21,
-      implemented: false,
+      kind: "foundRoom",
+      room: "buriedTemple",
+      clericCost: { diamonds: 8 },
       text: "Buried temple. Recruit a cleric here to Roll 1D4 and draw a card. On 1\u20133, consult Bad Magic (page 25 \u2013 26). On 4, consult Good Magic (page 27 \u2013 28). Usable once."
     },
     7: {
       name: "Abandoned room",
       page: 21,
-      implemented: false,
+      kind: "abandonedRoom",
       text: "An abandoned room. Looks like you weren\u2019t the first...choose a room and place it here."
     },
     8: {
       name: "Ancient library",
       page: 22,
-      implemented: false,
+      kind: "ancientLibrary",
+      size: "1D2",
       text: "Ancient library. 1D2 grid spaces in size. For the knowledge contained herein, roll 1D2 and draw a card: On 1, consult Good Magic (pages 25 \u2013 26); On 2, consult Bad Magic (pages 27 \u2013 28)."
     },
     9: {
       name: "Demon portal",
       page: 22,
-      implemented: false,
+      kind: "foundRoom",
+      room: "portal",
+      spawn: { foe: "Demons", str: 20, onRoll: 1 },
+      destroyCost: { diamonds: 20 },
       text: "Demon portal. Roll 1D4 at the end of each turn. On 1, spawn Demons with 20 STR. To destroy the portal, pay 20\u2666 and sacrifice one of your Clerics, killing them."
     },
     10: {
       name: "Golem forge",
       page: 22,
-      implemented: false,
+      kind: "lair",
+      size: 1,
+      str: 40,
+      foe: "Golems",
+      behaviour: "guard",
+      waits: true,
+      clearsTo: "golemForge",
       text: "Golem forge, with 40 STR of Golems, who won\u2019t attack unless you try to claim the room. If the Golems are defeated, this room allows you to recruit Golems at Forges."
     },
     J: {
       name: "Long lost artefact",
       page: 22,
-      implemented: false,
+      kind: "artefact",
+      bonus: 15,
       text: "Long lost artefact. Ancient magical weapon or armour. Choose a unit room to house this artefact, it adds +15 STR to any Troop housed there."
     },
     Q: {
       name: "Slumbering Wyrm",
       page: 22,
-      implemented: false,
+      kind: "wyrm",
+      str: 100,
+      steal: 20,
+      foe: "The Wyrm",
       text: "Slumbering Wyrm. An ancient dragon sleeps upon its hoard. Once per turn, you may steal 20\u2666, and roll 1D4. On 1, the Wyrm awakens, destroying the hoard. The Wyrm has 100 STR and Ranged, and rooms it attacks through are damaged."
     },
     K: {
       name: "Desolate court",
       page: 22,
-      implemented: false,
+      kind: "lair",
+      size: "1D4+2",
+      strPerSpace: 20,
+      prompt: "court",
+      behaviour: "march",
       text: "The desolate halls of a lich king, a vampire queen\u2019s coterie, or a skeletal court:1D4 + 2 grid spaces in size. Enemy STR equal to room size x 20."
     }
-  };
-  var SLICE_STAND_INS = {
-    C: { suitRank: "5", note: "not yet built into the game; drawn as a plain cavern for now" },
-    S: { suitRank: "2", note: "not yet built into the game; treated as a Forgotten Crypt for now" }
   };
 
   // src/data/rules.js
@@ -1014,6 +1153,12 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       if (!c.joker) return { roll: SUITS[c.suit].d4, card: c.id };
     }
   }
+  function rollD2(state2) {
+    for (; ; ) {
+      const c = parseCard(drawCard(state2, "1D2"));
+      if (!c.joker) return { roll: c.color === "black" ? 1 : 2, card: c.id };
+    }
+  }
 
   // src/engine/grid.js
   var PAGE_W = 8;
@@ -1043,18 +1188,36 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
   function setLink(state2, x, yUpper, type) {
     state2.links[linkKey(x, yUpper)] = type;
   }
+  var BLOCKING_GAS = { poison: true, flammable: true };
+  function isWet(cell) {
+    return !!(cell && (cell.flooded || cell.liquid));
+  }
   function isHoldCell(cell) {
     if (!cell) return false;
-    if (cell.flooded) return false;
+    if (isWet(cell) || BLOCKING_GAS[cell.gas] || cell.closed) return false;
     return cell.type === "entrance" || cell.type === "room" || cell.type === "cavern";
   }
   function isPassableForDwarves(cell) {
     if (!cell) return false;
-    if (cell.flooded) return false;
+    if (isWet(cell) || BLOCKING_GAS[cell.gas] || cell.closed) return false;
     return true;
   }
   function isPassableForEnemies(cell) {
-    return !!cell;
+    if (!cell) return false;
+    return cell.liquid !== "lava" && !cell.closed;
+  }
+  function openNeighbours(state2, x, y, dirs) {
+    const out = [];
+    for (const d of DIRS) {
+      const kind = d.dy === 0 ? "side" : d.dy > 0 ? "down" : "up";
+      if (!dirs.includes(kind)) continue;
+      const nx = x + d.dx;
+      const ny = y + d.dy;
+      if (!getCell(state2, nx, ny)) continue;
+      if (d.dy !== 0 && !getLink(state2, x, y, ny)) continue;
+      out.push({ x: nx, y: ny, kind });
+    }
+    return out;
   }
   function connectedNeighbours(state2, x, y, mode = "dwarf") {
     const passable = mode === "enemy" ? isPassableForEnemies : isPassableForDwarves;
@@ -1190,8 +1353,8 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     }
     return list[(h >>> 0) % list.length];
   }
-  function write(state2, text, ref = null) {
-    state2.chronicle.push({ turn: state2.turn, text, ref });
+  function write(state2, text, ref2 = null) {
+    state2.chronicle.push({ turn: state2.turn, text, ref: ref2 });
   }
   function chronicleAsText(state2, title = "The Chronicle of the Hold") {
     const lines = [title, "=".repeat(title.length), ""];
@@ -1241,14 +1404,16 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       if (!h.count) continue;
       const { x, y } = parseKey(k);
       const cell = getCell(state2, x, y);
-      if (!cell || cell.damaged || cell.claimed || !isConnected(state2, x, y)) continue;
+      if (!cell || cell.damaged || cell.claimed || cell.liquid || cell.gas === "poison" || !isConnected(state2, x, y)) continue;
       const u = UNITS[h.unit];
+      const bonus = (state2.artefacts || []).filter((a) => a.home === k).reduce((s, a) => s + a.bonus, 0);
       troops.push({
         id: `t${state2.nextId++}`,
         unit: h.unit,
         count: h.count,
         unitStr: u.str,
-        hp: h.count * u.str,
+        bonus,
+        hp: h.count * u.str + bonus,
         startCount: h.count,
         x,
         y,
@@ -1259,19 +1424,21 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     }
     return troops;
   }
-  function startCombat(state2, enemies) {
+  function startCombat(state2, enemies, opts = {}) {
+    if (state2.combat) {
+      for (const e of enemies) state2.combat.enemies.push(makeEnemy(state2, e));
+      return;
+    }
     state2.combat = {
       round: 0,
-      enemies: enemies.map((e) => ({
-        id: `e${state2.nextId++}`,
-        climb: 0,
-        stopped: 0,
-        ...e
-      })),
+      enemies: enemies.map((e) => makeEnemy(state2, e)),
       troops: spawnTroops(state2),
       shots: [],
+      enemyShots: [],
       log: [],
-      lostAtStart: state2.stats.unitsLost
+      lostAtStart: state2.stats.unitsLost,
+      skullDeaths: {},
+      after: opts.after || "trade"
     };
     const names = state2.combat.troops.map((t) => `${t.count} ${t.count === 1 ? UNITS[t.unit].name : UNITS[t.unit].plural}`);
     write(
@@ -1280,6 +1447,9 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       { page: RULES.combat.page, title: "Starting combat", quote: "To begin combat, spawn the enemy you discovered \u2026 Your rooms that spawn units at the start of combat do so now." }
     );
     beginRound(state2);
+  }
+  function makeEnemy(state2, e) {
+    return { id: `e${state2.nextId++}`, climb: 0, stopped: 0, behaviour: "march", ...e };
   }
   function log(state2, text) {
     state2.combat.log.push({ round: state2.combat.round, text });
@@ -1290,17 +1460,46 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
   function enemiesAt(state2, p) {
     return state2.combat.enemies.filter((e) => at(e, p));
   }
+  var isRoomSquare = (cell) => cell && (cell.type === "room" || cell.type === "entrance");
+  var blinded = (state2, p) => (getCell(state2, p.x, p.y) || {}).gas === "blinding";
+  function goalFor(state2, e) {
+    if (e.behaviour === "march") return ENTRANCE;
+    if (e.behaviour === "raid") {
+      if (e.raided) return parseKey(state2.lairs[e.lairId].home);
+      if (!e.target) {
+        let best = null;
+        for (const [k, c] of Object.entries(state2.cells)) {
+          if (!isRoomSquare(c)) continue;
+          const r = enemyRoute(state2, e, parseKey(k));
+          if (r && (!best || r.cost < best.cost)) best = { k, cost: r.cost };
+        }
+        if (!best) {
+          e.raided = true;
+          return goalFor(state2, e);
+        }
+        e.target = best.k;
+      }
+      return parseKey(e.target);
+    }
+    if (e.behaviour === "guard") {
+      const lair = state2.lairs[e.lairId];
+      const intruder = state2.combat.troops.find((t) => lair && lair.squares.includes(key(t.x, t.y)));
+      return intruder ? { x: intruder.x, y: intruder.y } : null;
+    }
+    return null;
+  }
   function beginRound(state2) {
     const c = state2.combat;
     c.round += 1;
     c.shots = [];
+    c.enemyShots = [];
     for (const t of c.troops) {
       t.acted = false;
       t.moved = false;
     }
     for (const e of c.enemies) {
       e.moved = false;
-      if (at(e, ENTRANCE)) {
+      if (e.behaviour === "march" && at(e, ENTRANCE)) {
         holdFalls(state2, e);
         return;
       }
@@ -1313,10 +1512,26 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
         log(state2, `${e.name} is held fast.`);
         continue;
       }
-      const route = enemyRoute(state2, e);
+      if (e.ranged && e.behaviour !== "sleep" && !blinded(state2, e)) {
+        const steps = stepsWithin(state2, e, 2);
+        const targets = c.troops.filter((t) => steps.has(key(t.x, t.y)) && !blinded(state2, t));
+        if (targets.length) {
+          const t = targets.sort((a, b) => b.hp - a.hp)[0];
+          c.enemyShots.push({ enemyId: e.id, troopId: t.id });
+          log(state2, `${e.name} breathes fire at ${troopName(t)}!`);
+          if (e.damagesRooms) scorchPath(state2, e, t);
+          continue;
+        }
+      }
+      const goal = goalFor(state2, e);
+      if (!goal || at(e, goal)) {
+        if (e.behaviour === "raid" && e.raided && goal && at(e, goal)) e.home = true;
+        continue;
+      }
+      const route = enemyRoute(state2, e, goal);
       if (!route) {
         if (!e.stuckNoted) {
-          log(state2, `${e.name} can find no way to the Entrance and lurks where it is.`);
+          log(state2, `${e.name} can find no way ${e.behaviour === "march" ? "to the Entrance" : "forward"} and lurks where it is.`);
           e.stuckNoted = true;
         }
         continue;
@@ -1334,8 +1549,42 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       e.y = step.y;
       e.moved = true;
       const here = troopsAt(state2, e);
-      log(state2, here.length ? `${e.name} advances and crashes into ${here.map(troopName).join(" and ")}!` : `${e.name} advances toward the Entrance.`);
+      log(state2, here.length ? `${e.name} advances and crashes into ${here.map(troopName).join(" and ")}!` : `${e.name} ${e.behaviour === "raid" && e.raided ? "slinks back toward its den" : "advances"}.`);
+      const cell = getCell(state2, e.x, e.y);
+      if (e.thief && isRoomSquare(cell) && !here.length) {
+        const lost = Math.min(e.thief, state2.res.diamonds);
+        state2.res.diamonds -= lost;
+        log(state2, `${e.name} ransack the empty ${roomLabel(cell)}: \u2212${lost}\u2666.`);
+      }
+      if (e.behaviour === "raid" && !e.raided && key(e.x, e.y) === e.target) {
+        e.raided = true;
+        e.raidedRound = c.round;
+      }
     }
+    const home = c.enemies.filter((e) => e.home);
+    for (const e of home) {
+      state2.lairs[e.lairId].str = e.str;
+      log(state2, `${e.name} vanishes back into its den.`);
+    }
+    if (home.length) {
+      c.enemies = c.enemies.filter((e) => !e.home);
+      if (!c.enemies.length) endCombat(state2, "The creature slipped back into its den; the fighting was over.");
+    }
+  }
+  function scorchPath(state2, e, t) {
+    const r = enemyRoute(state2, e, t);
+    if (!r) return;
+    for (const p of r.path) {
+      const cell = getCell(state2, p.x, p.y);
+      if (cell && cell.type === "room" && !cell.damaged) {
+        cell.damaged = true;
+        log(state2, `The ${roomLabel(cell)} is scorched and damaged.`);
+      }
+    }
+  }
+  function roomLabel(cell) {
+    const d = ROOMS[cell.room] || FOUND_ROOMS[cell.room];
+    return d ? d.name : "room";
   }
   function troopName(t) {
     const u = UNITS[t.unit];
@@ -1351,12 +1600,24 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     if (!u.ranged || troop.acted) return [];
     if (u.oncePerCombat && troop.fired) return [];
     if (enemiesAt(state2, troop).length) return [];
+    if (blinded(state2, troop)) return [];
     const steps = stepsWithin(state2, troop, 2);
-    return state2.combat.enemies.filter((e) => steps.has(key(e.x, e.y)) && !at(e, troop));
+    return state2.combat.enemies.filter((e) => steps.has(key(e.x, e.y)) && !at(e, troop) && !blinded(state2, e));
+  }
+  function canWithdraw(state2) {
+    const c = state2.combat;
+    if (!c) return false;
+    if (c.troops.some((t) => enemiesAt(state2, t).length)) return false;
+    return c.enemies.every((e) => e.behaviour !== "march" || !enemyRoute(state2, e));
   }
   function combatAction(state2, action) {
     const c = state2.combat;
     if (action.type === "endRound") return endRound(state2);
+    if (action.type === "withdraw") {
+      if (!canWithdraw(state2)) throw new GameError("You can\u2019t withdraw while foes march on the Entrance or Troops are locked in battle.");
+      for (const e of c.enemies) if (e.lairId && state2.lairs[e.lairId]) state2.lairs[e.lairId].str = e.str;
+      return endCombat(state2, "The Overseer called the Troops back; the foes were left to their lairs.");
+    }
     const troop = c.troops.find((t) => t.id === action.troopId);
     if (!troop) throw new GameError("No such Troop.");
     if (action.type === "moveTroop") {
@@ -1375,6 +1636,8 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       troop.fired = true;
       c.shots.push({ troopId: troop.id, enemyId: target.id, dmg: troopStr(troop) });
       log(state2, `${troopName(troop)} loose a volley at ${target.name}.`);
+    } else {
+      throw new GameError(`Unknown combat action ${action.type}`);
     }
   }
   function spreadOnEnemies(enemies, dmg, pending) {
@@ -1407,6 +1670,11 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       const e = c.enemies.find((x) => x.id === s.enemyId);
       if (e) spreadOnEnemies(enemiesAt(state2, e), s.dmg, onEnemy);
     }
+    for (const s of c.enemyShots) {
+      const e = c.enemies.find((x) => x.id === s.enemyId);
+      const t = c.troops.find((x) => x.id === s.troopId);
+      if (e && t) spreadOnTroops([t], e.str, onTroop);
+    }
     const squares = new Set(c.enemies.map((e) => key(e.x, e.y)));
     for (const k of squares) {
       const p = parseKey(k);
@@ -1423,21 +1691,27 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       if (!d) continue;
       e.str -= d;
       log(state2, e.str > 0 ? `${e.name} takes ${d} damage (${e.str} STR left).` : `${e.name} is destroyed!`);
+      if (e.str > 0 && e.leavesWhenAttacked && e.behaviour === "guard") {
+        e.behaviour = "march";
+        log(state2, `Enraged, ${e.name} leaves its lair and makes for the Entrance!`);
+      }
+      if (e.str > 0 && e.behaviour === "sleep") e.behaviour = "march";
     }
     for (const t of c.troops) {
       const d = onTroop.get(t.id) || 0;
       if (!d) continue;
       const before = t.count;
       t.hp -= d;
-      t.count = Math.max(0, Math.ceil(t.hp / t.unitStr));
+      t.count = t.hp <= 0 ? 0 : Math.min(t.count, Math.ceil(t.hp / t.unitStr));
       const lost = before - t.count;
       state2.stats.unitsLost += lost;
+      if (t.unit === "skullDwarf" && lost) c.skullDeaths[t.home] = (c.skullDeaths[t.home] || 0) + lost;
       log(state2, t.count > 0 ? `${UNITS[t.unit].plural} take ${d} damage${lost ? `; ${lost} fall` : ""} (${t.hp} STR left).` : `The last of the ${UNITS[t.unit].plural} from the ${homeName(state2, t)} fall.`);
     }
     const dead = c.enemies.filter((e) => e.str <= 0);
     for (const e of dead) {
       state2.stats.kills.push({ name: e.name, baseStr: e.baseStr, turn: state2.turn });
-      if (e.lair) clearLair(state2, e);
+      if (e.lairId) clearLair(state2, e);
     }
     c.enemies = c.enemies.filter((e) => e.str > 0);
     const fallen = c.troops.filter((t) => t.count <= 0);
@@ -1448,27 +1722,52 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
   }
   function homeName(state2, t) {
     const cell = state2.cells[t.home];
-    return cell && (FOUND_ROOMS[cell.room] || {}).name || cell && cell.room || "hold";
+    return cell ? roomLabel(cell) : "hold";
   }
   function clearLair(state2, e) {
-    const cell = state2.cells[e.lair];
-    if (!cell || cell.type !== "lair") return;
-    if (state2.combat.enemies.some((o) => o !== e && o.lair === e.lair && o.str > 0)) return;
-    state2.cells[e.lair] = { type: "room", room: "crypt", found: { card: cell.lair.card } };
+    const lair = state2.lairs[e.lairId];
+    if (!lair) return;
+    if (state2.combat.enemies.some((o) => o !== e && o.lairId === e.lairId && o.str > 0)) return;
+    for (const k of lair.squares) {
+      const cell = state2.cells[k];
+      if (!cell || cell.type !== "lair") continue;
+      if (lair.clearsTo && k === lair.home) {
+        state2.cells[k] = { type: "room", room: lair.clearsTo, found: { card: lair.card } };
+      } else if (lair.wyrm) {
+        state2.cells[k] = { type: "room", room: "emptyHoard", found: { card: lair.card } };
+      } else {
+        state2.cells[k] = { type: "cavern", feature: "ruins", found: { card: lair.card } };
+      }
+    }
+    if (lair.clearsTo === "golemForge") state2.unlocks = { ...state2.unlocks || {}, golems: true };
+    delete state2.lairs[e.lairId];
   }
-  function endCombat(state2) {
+  function endCombat(state2, closing = null) {
     const c = state2.combat;
     for (const t of c.troops) {
       state2.housing[t.home] = { unit: t.unit, count: t.count };
+    }
+    let revived = 0;
+    for (const [home, n] of Object.entries(c.skullDeaths)) {
+      for (let i = 0; i < n; i++) {
+        if (rollD4(state2).roll >= 3) {
+          const h = state2.housing[home] || { unit: "skullDwarf", count: 0 };
+          h.unit = "skullDwarf";
+          h.count += 1;
+          state2.housing[home] = h;
+          revived++;
+        }
+      }
     }
     const lost = state2.stats.unitsLost - c.lostAtStart;
     const deaths = c.log.filter((l) => /destroyed|fall/.test(l.text)).map((l) => l.text).join(" ");
     write(
       state2,
-      `After ${c.round} round${c.round === 1 ? "" : "s"} the fighting was done. ${deaths}` + (lost === 0 ? " Not a single dwarf was lost." : ` ${lost} dwarf${lost === 1 ? "" : "s"} will be mourned.`),
+      `${closing || `After ${c.round} round${c.round === 1 ? "" : "s"} the fighting was done.`} ${deaths}` + (lost === 0 ? " Not a single dwarf was lost." : ` ${lost} dwarf${lost === 1 ? "" : "s"} will be mourned.`) + (revived ? ` ${revived} Skull Dwarf${revived === 1 ? "" : "s"} clattered back to unlife.` : ""),
       { page: RULES.combat.page, title: RULES.combat.title, quote: RULES.combat.text }
     );
     state2.lastCombatLog = c.log;
+    state2.afterCombat = c.after;
     state2.combat = null;
   }
   function holdFalls(state2, e) {
@@ -1483,40 +1782,8 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     );
   }
 
-  // src/engine/game.js
+  // src/engine/economy.js
   var BASE_CAP = 50;
-  function newGame({ seed = Date.now() % 2147483647, holdName = "the Hold", options = {} } = {}) {
-    const state2 = {
-      version: 1,
-      holdName,
-      seed,
-      rng: seed | 0,
-      turn: 1,
-      phase: "explore",
-      res: { hearts: 20, diamonds: 20 },
-      cells: {},
-      links: {},
-      housing: {},
-      deck: { stack: [], drawn: [], jokersIn: false, heldOut: {} },
-      flags: { traded: false, roomBuilt: false },
-      combat: null,
-      chronicle: [],
-      stats: { maxDepth: 1, roomsBuilt: 0, kills: [], unitsLost: 0, turnsSurvived: 0 },
-      lastCard: null,
-      over: null,
-      options: { worldLayers: false, ...options },
-      nextId: 1
-    };
-    const ek = key(ENTRANCE.x, ENTRANCE.y);
-    state2.cells[ek] = { type: "entrance", room: "entrance" };
-    state2.housing[ek] = { unit: "soldier", count: 5 };
-    write(
-      state2,
-      `The first stones of ${holdName} were laid: a stairwell cut into the mountainside, twenty loads of resources, twenty of trade goods, and five Soldiers standing guard at the Entrance.`,
-      { page: 2, title: "Starting the game", quote: "To start your hold draw a stairwell at the centre of the top row of your grid paper. This is the Entrance of your hold. \u2026 note that you have 20 of each to start. \u2026 note that you have five Soldiers (page 6) at the Entrance." }
-    );
-    return state2;
-  }
   function capOf(state2, kind) {
     const roomId = kind === "hearts" ? "stockpile" : "treasury";
     let extra = 0;
@@ -1526,15 +1793,15 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
   function gain(state2, kind, amount) {
     const cap = capOf(state2, kind);
     const room = Math.max(0, cap - state2.res[kind]);
-    const gained = Math.min(room, amount);
+    const gained = Math.min(room, Math.max(0, amount));
     state2.res[kind] += gained;
-    return { gained, lost: amount - gained };
+    return { gained, lost: Math.max(0, amount) - gained };
   }
   function canAfford(state2, cost) {
     return (cost.hearts || 0) <= state2.res.hearts && (cost.diamonds || 0) <= state2.res.diamonds;
   }
   function pay(state2, cost) {
-    if (!canAfford(state2, cost)) throw new GameError("You cannot afford that.");
+    if (!canAfford(state2, cost)) throw new GameError(`You need ${costText(cost)} for that.`);
     state2.res.hearts -= cost.hearts || 0;
     state2.res.diamonds -= cost.diamonds || 0;
   }
@@ -1544,101 +1811,208 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     if (cost.diamonds) parts.push(`${cost.diamonds}\u2666`);
     return parts.length ? parts.join(" + ") : "free";
   }
-  function apply(prev, action) {
-    if (prev.over) throw new GameError("This hold\u2019s story is over.");
-    const state2 = JSON.parse(JSON.stringify(prev));
-    switch (action.type) {
-      case "explore":
-        explore(state2, action);
-        break;
-      case "trade":
-        trade(state2, action);
-        break;
-      case "build":
-        build(state2, action);
-        break;
-      case "recruit":
-        recruit(state2, action);
-        break;
-      case "endTurn":
-        endTurn(state2);
-        break;
-      case "moveTroop":
-      case "fire":
-      case "endRound":
-        if (state2.phase !== "combat") throw new GameError("There is no fight going on.");
-        combatAction(state2, action);
-        if (!state2.combat && !state2.over) state2.phase = "trade";
-        break;
-      default:
-        throw new GameError(`Unknown action ${action.type}`);
+  function gainText(kind, { gained, lost }) {
+    const sym = kind === "hearts" ? "\u2665" : "\u2666";
+    return `${gained}${sym}${lost ? ` (${lost}${sym} more would not fit in the stores)` : ""}`;
+  }
+
+  // src/data/magic.js
+  var GOOD_MAGIC = {
+    A: { name: "Passage to the Deep", page: 25, text: "A magical portal that allows you quick access to the depths. Draw a card, and create the other end of the portal a number of grid spaces directly below this room equal to its value." },
+    2: { name: "Protective Wards", page: 25, text: "Magical sigils, floating lights, or another form of magic entirely protects a room of your choice. Counts as a Level 3 Damage Trap but does not block your units." },
+    3: { name: "Living Metal", page: 25, text: "This spell counts as a unit, but cannot attack or be attacked on its own. During combat, spawn this from any Forge. When it moves into the same grid space as a friendly unit / Troop, it grants that unit / Troop +40 STR." },
+    4: { name: "Clone", page: 25, text: "Choose a Troop and gain an identical clone copy of it. Just don\u2019t look directly into their unblinking eyes..." },
+    5: { name: "Pawrtal", page: 25, text: "An elvish wizard\u2019s pocket realm, filled with lovable cats. Once per turn you may pay 5\u2666 to roll 1D4. On a 4, gain a friendly Sabretooth (20 STR, 2 grid space movement). Spawns from a Kennel during combat." },
+    6: { name: "Fleet Forest", page: 25, text: "Green liquid pours from this grid space, growing thick bamboo shoots and massive trees in every grid space it touches. You may cut down the growth in each grid space for 20\u2665. Does not need to be drained, and does no damage." },
+    7: { name: "Blessing", page: 25, text: "The gods have smiled upon you, sealing any revealed demon portals (9\u2660), or Circuses of Chaos (page 29)." },
+    8: { name: "Siren Song", page: 26, text: "A magical instrument that draws enemies to it. Choose a room to place the Siren Song in: enemies will try to reach this room instead of your Entrance. If an enemy reaches this room, the siren song is destroyed." },
+    9: { name: "Nurse\u2019s Sigil", page: 26, text: "Red heart engravings surrounded by floating lights. Choose a grid space. Units and Troops that move through this space are returned to full STR." },
+    10: { name: "Gills", page: 26, text: "A blessing, though from what source, you do not know. Dwarves are now unaffected by liquids (excluding lava)." },
+    J: { name: "Valkyria", page: 26, text: "Ethereal dwarves wander the halls of your hold, attending to the sick and dying. Hospital rooms no longer need adjacency, but are still limited to 1 Troop per combat." },
+    Q: { name: "Hudrak\u2019s Chains", page: 26, text: "Choose a room. If an Ancient Monstrosity enters the chosen room, it is permanently trapped by Hudrak\u2019s Chains. Once one is trapped, dwarves can no longer pass through this room." },
+    K: { name: "Charming Colours", page: 26, text: "A living spell that will make friends of your enemies. Charming Colours moves as though it were a unit, and when it reaches a grid space with an enemy, you gain control of it, and may treat it like one of your own units. Cannot affect Ancient Monstrosities. Charming Colours disappears once an enemy has been charmed." }
+  };
+  var BAD_MAGIC = {
+    A: { name: "The Greedy King\u2019s Touch", page: 27, text: "A cursed dwarf touches everything in a room of your choice, turning it, and themselves, to gold. Gain 30\u2666 for each grid space of the room, then it is destroyed." },
+    2: { name: "Grozin\u2019s Garish Gaze", page: 27, text: "Double the cost of the next room you build. The room must be decorated awfully: bright pastel colours, outrageous decor...just plain terrible." },
+    3: { name: "Diamond Dust", page: 27, text: "The next \u2666 you draw while exploring turns to dust in your hands: you gain no benefit from it. If the card is drawn for a Crystal Cavern (6\u2663), the cavern is destroyed." },
+    4: { name: "Contagious Cowardice", page: 27, text: "The nearest Troop is affected by a magical terror. The Troop moves to the Entrance to escape, taking the shortest possible route. If the Troop passes through any Unit Rooms, all units in those rooms leave with them." },
+    5: { name: "Mortek\u2019s Magma Drill", page: 27, text: "A pillar of lava melts through 2D4 grid spaces below the room where this spell is discovered, destroying any rooms in those spaces. Liquid." },
+    6: { name: "Circus of Chaos", page: 27, text: "A Circus appears in the nearest empty grid space. This acts like a Demon Portal (9\u2660), except it spawns Creepy Clowns with 30 STR instead." },
+    7: { name: "Worm", page: 27, text: "Using the grid space this spell is discovered in as its source, the Worm burrows through 1D4 grid spaces, destroying any rooms it moves through, leaving a tunnel in its wake. Roll 1D4 to determine direction: 1 \u2013 Up, 2 \u2013 Left, 3 \u2013 Down, 4 \u2013 Right." },
+    8: { name: "Swampify!", page: 28, text: "A swamp spawns in this grid space. Treat as liquid. At the end of your next turn, spawn Murder Toads (10 STR) in each grid touched by the swamp\u2019s liquid." },
+    9: { name: "Mimic", page: 28, text: "The nearest room becomes a Mimic. Its door hides a mouth; its furnishings cover wicked teeth. This room has 100 STR, and cannot move. Your units cannot pass this room until it is defeated." },
+    10: { name: "Doomed", page: 28, text: "Remove the Red Joker for 5 turns. Shuffle the Black Joker into the deck if it is not already in." },
+    J: { name: "Possession", page: 28, text: "The nearest unit / Troop is possessed by evil spirits and becomes an enemy." },
+    Q: { name: "Outbreak", page: 28, text: "Roll 1D2. If there are any Units / Troops within that many grid spaces, they become hostile Undead (10 STR), and you repeat this process from the grid space with the newly created Undead. This does not affect Golems, Cannons, or Skull Dwarves." },
+    K: { name: "Monstrous Form", page: 28, text: "Spawn an Ancient Monstrosity with only 25 STR. Draw only once for a single trait." }
+  };
+  var WYRD = {
+    A: { name: "Bone-ribbed cavern", page: 29, text: "A cavern supported by the bones of an ancient beast. 1D4 grid spaces in size. Rooms built here automatically get a special Level 5 Defensive Barricade." },
+    2: { name: "Slime cave", page: 29, text: "Uh oh...slime cave. Spawn Slimes (32 STR). Whenever these pesky creatures are killed, coat the current grid space with slime which costs the same as lava to drain." },
+    3: { name: "Meat cave", page: 29, text: "Meat cave. No stone, just meat and organs, in a twisted parody of life." },
+    4: { name: "A portal", page: 29, text: "A portal. Choose a space within 5 grid spaces and spawn a second portal there. Units can travel between these two portals as if they were adjacent." },
+    5: { name: "Nuts?!", page: 29, text: "Nuts?! A preposterous amount of acorns, and squirrels. Treat as a liquid (a river of nuts), followed by a Hive (9\u2663) of Squirrels." },
+    6: { name: "God Mushroom", page: 29, text: "This cavern is filled with the hyphae of a God Mushroom. It spreads 1 grid space per turn unless touched by fire or lava. Any Units / Troops in a space affected by the spread become infected: they gain +5 STR and become hostile." },
+    7: { name: "Time Crystals", page: 29, text: "Time Crystals. Roll 1D2 whenever a unit / Troop enters this room. On 1, they are safe. On 2, they are aged to dust. Optionally, you can now build rooms from the game UMBRA at 10x their written cost." },
+    8: { name: "Living fossils", page: 30, text: "Glacially slow, living fossils that crave the sun\u2019s embrace. If you have (or find) Time Crystals, they come to life with 100 STR and are hostile. Tamable once they come to life." },
+    9: { name: "Mole people", page: 30, text: "Behold, a village of mole people! These peculiar creatures walk and talk like us, and can be hired for 10\u2666 each. Moles have 7 STR and can travel through walls and floors." },
+    10: { name: "Dwarf in crystal", page: 30, text: "A dwarf encased in crystal clutching an artefact. Mine them out to draw on the Legendary Finds table (pages 33 - 34) and receive a free Soldier." },
+    J: { name: "Knowledgeable creature", page: 30, text: "A knowledgeable creature resides here, offering wisdom of the depths. Once per turn, you may pay the creature 5\u2666 to look at the top card of the deck and choose whether to keep or discard it. If you choose to discard, you must play the next card. Jokers cannot be discarded." },
+    Q: { name: "Whistling Caves", page: 30, text: "Whistling Caves. Any unit / Troop that moves within 2 grid spaces of this room must roll a 4 on 1D4 to resist getting lost in its depths. If they fail they enter the cave and are defeated. Does not affect Ancient Monstrosities." },
+    K: { name: "The Realm of Lost Things", page: 30, text: "The Realm of Lost Things. 2 grid spaces in size. Filled with junk. Each turn, draw a card. If it is a numbered card, gain \u2666 equal to its value. Face cards give you one free unit: J \u2013 Soldier, Q \u2013 Golem, K \u2013 Cannon." }
+  };
+  var PROMPTS = {
+    village: ["Goblins", "Kobolds", "Frog People", "Pixies"],
+    court: ["Wizard\u2019s Study", "Cthonic Cult", "Elvish Oubliette", "Demonic Fortress"],
+    large: ["Cave Kraken", "Basilisk", "Living Shadow", "Elemental"],
+    burrower: ["Sabre-tooth Mole", "Stone Worm", "Undead Owl", "Nesting Lizard"],
+    small: ["Feral Dwarf", "Troll", "Huge Bat", "Angry Cave Goat"],
+    trappedEvil: ["Burning Orb", "Chain Bound Soul", "Skull Topped Staff", "Arcane Machinery"],
+    hive: ["Black Wasps", "Giant Ants", "Clockwork Spiders", "Snakes"]
+  };
+  var COURT_FOES = {
+    "Wizard\u2019s Study": "Spellbound Apprentices",
+    "Cthonic Cult": "Cultists",
+    "Elvish Oubliette": "Elvish Wardens",
+    "Demonic Fortress": "Demon Courtiers"
+  };
+
+  // src/engine/flow.js
+  var LIQUID_NAMES = { water: "water", lava: "lava", swamp: "swamp" };
+  function blocksFlow(cell, what) {
+    if (!cell) return true;
+    if (cell.closed) return true;
+    if (cell.barricade && cell.barricade.type === "defensive") return true;
+    if (what === "liquid" && (cell.room === "pump" || cell.liquid)) return true;
+    if (what === "gas" && (cell.gas || cell.liquid)) return true;
+    return false;
+  }
+  function nearest(state2, sources, dirs, what, count) {
+    const dist = new Map(sources.map((p) => [key(p.x, p.y), 0]));
+    let frontier = [...sources];
+    const found = [];
+    for (let d = 1; frontier.length && found.length < count; d++) {
+      const next = [];
+      for (const p of frontier) {
+        for (const n of openNeighbours(state2, p.x, p.y, dirs)) {
+          const k = key(n.x, n.y);
+          if (dist.has(k)) continue;
+          dist.set(k, d);
+          if (blocksFlow(state2.cells[k], what)) continue;
+          next.push(n);
+        }
+      }
+      next.sort((a, b) => a.x - b.x || a.y - b.y);
+      for (const n of next) if (found.length < count) found.push(n);
+      frontier = next;
     }
-    return state2;
+    return found;
   }
-  function requirePhase(state2, allowed, verb) {
-    if (!allowed.includes(state2.phase)) {
-      throw new GameError(`You can\u2019t ${verb} during the ${state2.phase} step.`);
+  function fall(state2, start, dy, what) {
+    const out = [];
+    let p = start;
+    for (; ; ) {
+      const ny = p.y + dy;
+      const cell = getCell(state2, p.x, ny);
+      if (!cell || !getLink(state2, p.x, p.y, ny) || blocksFlow(cell, what)) break;
+      p = { x: p.x, y: ny };
+      out.push(p);
     }
+    return out;
   }
-  function dirFrom(state2, x, y) {
-    for (const d of DIRS) {
-      const from = getCell(state2, x - d.dx, y - d.dy);
-      if (isHoldCell(from)) return d.name;
+  function drownUnits(state2, k) {
+    const h = state2.housing[k];
+    if (!h || !h.count || UNITS[h.unit].immuneToFlow) return 0;
+    const lost = h.count;
+    state2.stats.unitsLost += lost;
+    h.count = 0;
+    return lost;
+  }
+  function spreadLiquid(state2, sources, liquid) {
+    const spill = nearest(state2, sources, ["side", "down"], "liquid", 2);
+    const wet = [];
+    const mark = (p) => {
+      const k = key(p.x, p.y);
+      const cell = state2.cells[k];
+      if (blocksFlow(cell, "liquid")) return false;
+      cell.liquid = liquid;
+      if (liquid === "lava" && cell.type === "room" && cell.room !== "entrance") cell.damaged = true;
+      wet.push(p);
+      return true;
+    };
+    for (const p of spill) mark(p);
+    const pourFrom = [...sources, ...wet];
+    for (const p of pourFrom) for (const q of fall(state2, p, 1, "liquid")) mark(q);
+    let lost = 0;
+    for (const p of [...sources, ...wet]) lost += drownUnits(state2, key(p.x, p.y));
+    return { wet, lost, name: LIQUID_NAMES[liquid] };
+  }
+  function spreadGas(state2, source, gas) {
+    const src = state2.cells[key(source.x, source.y)];
+    src.gas = gas;
+    const spread = nearest(state2, [source], ["side", "up"], "gas", 2);
+    const filled = [source];
+    for (const p of spread) {
+      state2.cells[key(p.x, p.y)].gas = gas;
+      filled.push(p);
     }
-    return "down";
-  }
-  function explore(state2, { x, y }) {
-    requirePhase(state2, ["explore"], "explore");
-    const ok = explorableSquares(state2).some((p) => p.x === x && p.y === y);
-    if (!ok) throw new GameError("You can only explore an unexplored square next to your hold.");
-    const depth = depthOf(y);
-    const dir = dirFrom(state2, x, y);
-    let id = drawCard(state2);
-    let card = parseCard(id);
-    while (!card.joker && card.suit === "S" && depth === 1) {
-      write(
-        state2,
-        `At depth 1 the ${cardLabel(id)} was turned aside; the overseer bid the miners dig on.`,
-        { card: id, ...RULES.spadeAtDepth1, quote: RULES.spadeAtDepth1.text }
-      );
-      id = drawCard(state2);
-      card = parseCard(id);
+    for (const p of [...filled]) {
+      for (const q of fall(state2, p, -1, "gas")) {
+        state2.cells[key(q.x, q.y)].gas = gas;
+        filled.push(q);
+      }
     }
-    state2.lastCard = { id, x, y, depth };
-    state2.stats.maxDepth = Math.max(state2.stats.maxDepth, depth);
-    if (card.joker) {
-      openCavern(state2, x, y, { card: id });
-      write(state2, `A strange card, the ${card.name}, came up \u2014 its legend is not yet written into this game.`);
-    } else if (card.suit === "H" || card.suit === "D") {
-      mineResources(state2, x, y, card, depth, dir);
-    } else if (card.suit === "C") {
-      naturalFormation(state2, x, y, card, depth, dir);
-    } else {
-      remnant(state2, x, y, card, depth, dir);
+    let lost = 0;
+    let exploded = null;
+    if (gas === "poison") for (const p of filled) lost += drownUnits(state2, key(p.x, p.y));
+    if (gas === "flammable") {
+      const spark = filled.find((p) => ["forge", "inn", "barracks"].includes(state2.cells[key(p.x, p.y)].room));
+      if (spark) exploded = explode(state2, filled);
     }
-    state2.phase = state2.combat ? "combat" : "trade";
+    if (exploded) lost += exploded.lost;
+    return { filled, lost, exploded };
   }
-  function openCavern(state2, x, y, extra = {}) {
-    state2.cells[key(x, y)] = { type: "cavern", ...extra };
-    connectNewSquare(state2, x, y);
+  function explode(state2, squares) {
+    let lost = 0;
+    let damaged = 0;
+    for (const p of squares) {
+      const k = key(p.x, p.y);
+      const cell = state2.cells[k];
+      lost += drownUnits(state2, k);
+      if (cell.type === "room" && cell.room !== "entrance") {
+        cell.damaged = true;
+        damaged++;
+      }
+      delete cell.gas;
+    }
+    return { lost, damaged };
   }
-  function cardIncome(state2, card, depth) {
-    const flat = 0;
-    const mult = 1;
-    return (card.value + flat) * mult + depth;
+  function drainCost(cell) {
+    if (cell.liquid === "lava" || cell.slime) return { diamonds: 20 };
+    return { diamonds: 5 };
   }
-  function mineResources(state2, x, y, card, depth, dir) {
-    const kind = card.suit === "H" ? "hearts" : "diamonds";
-    const amount = cardIncome(state2, card, depth);
-    openCavern(state2, x, y, { found: { card: card.id } });
-    const { gained, lost } = gain(state2, kind, amount);
-    const sym = SUITS[card.suit].symbol;
-    const opener = hashPick(MINING_LINES[kind], state2.turn, x, y);
-    const where = hashPick(DIR_WORDS[dir], state2.turn, x);
-    let text = `Digging ${where} at depth ${depth}: ${opener}. ${cardLabel(card.id)} \u2014 ${card.value} + ${depth} for depth = ${amount}${sym}.`;
-    if (lost) text += ` The storerooms could hold only ${gained}; ${lost}${sym} was left in the dark (cap ${capOf(state2, kind)}).`;
-    const rule = RULES[kind];
-    write(state2, text, { card: card.id, page: rule.page, title: rule.title, quote: rule.text });
+  function drain(state2, x, y) {
+    const cell = state2.cells[key(x, y)];
+    const wasLava = cell.liquid === "lava";
+    delete cell.liquid;
+    delete cell.flooded;
+    delete cell.gas;
+    if (wasLava && cell.type === "room" && cell.room !== "entrance") cell.damaged = true;
+    return { wasLava };
+  }
+
+  // src/engine/discover.js
+  var plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  function ref(card, entry) {
+    return { card, page: entry.page, title: `${cardLabel(card)} \u2014 ${entry.name}`, quote: entry.text };
+  }
+  function rollSize(state2, spec) {
+    if (typeof spec === "number") return { size: spec, note: "" };
+    const m = /^1D([24])(?:\+(\d+))?$/.exec(spec);
+    const r = m[1] === "4" ? rollD4(state2) : rollD2(state2);
+    const plus = m[2] ? Number(m[2]) : 0;
+    return { size: r.roll + plus, note: `${spec} rolled ${r.roll + plus}` };
   }
   function growShape(state2, x, y, size) {
     const shape2 = [{ x, y }];
@@ -1671,47 +2045,588 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     const inShape = new Set(shape2.map((p) => key(p.x, p.y)));
     for (const p of shape2) if (inShape.has(key(p.x, p.y + 1))) setLink(state2, p.x, p.y, "shaft");
   }
-  function naturalFormation(state2, x, y, card, depth, dir) {
-    let entry = CLUBS[card.rank];
-    let note = "";
-    if (!entry.implemented) {
-      note = ` (The ${entry.name} is ${SLICE_STAND_INS.C.note}.)`;
-      entry = CLUBS[SLICE_STAND_INS.C.suitRank];
-    }
+  function openCavern(state2, x, y, extra = {}) {
+    state2.cells[key(x, y)] = { type: "cavern", feature: "cave", ...extra };
+    connectNewSquare(state2, x, y);
+  }
+  function pickPrompt(state2, list) {
     const { roll } = rollD4(state2);
-    const shape2 = growShape(state2, x, y, roll);
-    const group = state2.nextId++;
-    placeShape(state2, shape2, () => ({ type: "cavern", group, found: { card: card.id } }));
+    return list[roll - 1];
+  }
+  function drawOnTable(state2, table, why) {
+    const tables = { good: [GOOD_MAGIC, "Good Magic"], bad: [BAD_MAGIC, "Bad Magic"], wyrd: [WYRD, "Wyrd"] };
+    const [data, label] = tables[table];
+    let id;
+    let card;
+    do {
+      id = drawCard(state2, label);
+      card = parseCard(id);
+    } while (card.joker);
+    const entry = data[card.rank];
+    state2.lastDraws.push({ card: id, table: label, name: entry.name, text: entry.text, page: entry.page });
     write(
       state2,
-      `The wall gave way ${hashPick(DIR_WORDS[dir], state2.turn, y)} at depth ${depth} onto an open cavern, ${shape2.length} grid space${shape2.length > 1 ? "s" : ""} wide (1D4 rolled ${roll}).${note}`,
-      { card: card.id, page: CLUBS[card.rank].page, title: `${cardLabel(card.id)} \u2014 ${CLUBS[card.rank].name}`, quote: CLUBS[card.rank].text }
+      `${why} ${label}, ${cardLabel(id)}: ${entry.name}. (Not yet automated: apply it by hand if you wish.)`,
+      { card: id, page: entry.page, title: `${label} \u2014 ${entry.name}`, quote: entry.text }
     );
+    return { card: id, entry };
+  }
+  function magicByD2(state2, why) {
+    const { roll } = rollD2(state2);
+    return drawOnTable(state2, roll === 1 ? "good" : "bad", `${why} (1D2 rolled ${roll}):`);
+  }
+  var lairCounter = 0;
+  function newLairId(state2) {
+    lairCounter = state2.nextId++;
+    return `L${lairCounter}`;
+  }
+  function createLair(state2, shape2, { card, entry, name, foe, baseStr, depth, extra = {} }) {
+    const id = newLairId(state2);
+    placeShape(state2, shape2, () => ({ type: "lair", lair: id }));
+    state2.lairs[id] = {
+      id,
+      card,
+      entryKey: `${parseCard(card).suit}${parseCard(card).rank}`,
+      name,
+      foe,
+      baseStr,
+      str: baseStr + 5 * depth,
+      // R16
+      squares: shape2.map((p) => key(p.x, p.y)),
+      home: key(shape2[0].x, shape2[0].y),
+      behaviour: entry.behaviour || "march",
+      leavesWhenAttacked: !!entry.leavesWhenAttacked,
+      waits: !!entry.waits,
+      clearsTo: entry.clearsTo || null,
+      thief: entry.stealsFromEmptyRooms || 0,
+      tamable: !!entry.tamable,
+      ...extra
+    };
+    return state2.lairs[id];
+  }
+  function enemyFromLair(lair, at2 = null) {
+    const p = at2 || { x: Number(lair.home.split(",")[0]), y: Number(lair.home.split(",")[1]) };
+    return {
+      name: lair.foe,
+      baseStr: lair.baseStr,
+      str: lair.str,
+      x: p.x,
+      y: p.y,
+      lairId: lair.id,
+      behaviour: lair.behaviour,
+      leavesWhenAttacked: lair.leavesWhenAttacked,
+      thief: lair.thief,
+      ranged: !!lair.ranged,
+      damagesRooms: !!lair.damagesRooms
+    };
+  }
+  function naturalFormation(state2, x, y, card, depth, dir) {
+    const entry = CLUBS[card.rank];
+    const r = ref(card.id, entry);
+    const where = hashPick(DIR_WORDS[dir], state2.turn, x, y);
+    const spills = dir !== "down";
+    switch (entry.kind) {
+      case "forest": {
+        if (depth >= entry.wyrdFromDepth) {
+          openCavern(state2, x, y, { feature: "wyrd", found: { card: card.id } });
+          write(state2, `At depth ${depth} the ${cardLabel(card.id)} opened onto something that was no forest.`, r);
+          const w = drawOnTable(state2, "wyrd", "The Wyrd table answered");
+          state2.cells[key(x, y)].wyrd = w.entry.name;
+          return;
+        }
+        openCavern(state2, x, y, { feature: "forest", found: { card: card.id } });
+        write(state2, `Digging ${where} at depth ${depth}, the miners broke into an underground forest: pale trunks, dripping moss, the smell of loam. Keep it for 2\u2665 each turn, or build a room here for free.`, r);
+        return;
+      }
+      case "gas": {
+        const { roll, card: rollCard } = rollD4(state2);
+        const gas = entry.byRoll[roll];
+        openCavern(state2, x, y, { feature: "gasChamber", found: { card: card.id } });
+        const res = spreadGas(state2, { x, y }, gas);
+        const names = { poison: "poison gas", flammable: "flammable gas", blinding: "blinding gas" };
+        let text = `A hiss ${where} at depth ${depth}: a chamber of ${names[gas]} (1D4 drew ${cardLabel(rollCard)} = ${roll}). It crept through ${plural(res.filled.length, "square")}.`;
+        if (res.exploded) text += ` It reached a fire and EXPLODED, damaging ${plural(res.exploded.damaged, "room")}.`;
+        if (res.lost) text += ` ${plural(res.lost, "dwarf")} did not come out again.`;
+        if (gas === "blinding") text += " Ranged units cannot shoot through it.";
+        if (gas !== "blinding" && !res.exploded) text += " Drain it for 5\u2666 a square to pass again.";
+        write(state2, text, r);
+        return;
+      }
+      case "naturalMagic": {
+        openCavern(state2, x, y, { feature: "grotto", found: { card: card.id } });
+        write(state2, `At depth ${depth} the air itself shimmered: natural magic.`, r);
+        magicByD2(state2, "The magic was drawn");
+        return;
+      }
+      case "river": {
+        const liquid = entry.liquid;
+        const x0 = Math.floor(x / PAGE_W) * PAGE_W;
+        const x1 = x0 + PAGE_W - 1;
+        let step;
+        let tieNote = "";
+        if (x - x0 < x1 - x) step = -1;
+        else if (x1 - x < x - x0) step = 1;
+        else {
+          const d = rollD2(state2);
+          step = d.roll === 1 ? -1 : 1;
+          tieNote = ` (both edges equally close; 1D2 sent it ${step < 0 ? "west" : "east"})`;
+        }
+        const squares = [{ x, y }];
+        for (let nx = x + step; nx >= x0 && nx <= x1 && !getCell(state2, nx, y); nx += step) squares.push({ x: nx, y });
+        const feature = liquid === "lava" ? "magma" : "river";
+        placeShape(state2, squares, () => ({ type: "cavern", feature, liquid, found: { card: card.id } }));
+        let text = liquid === "lava" ? `Heat, then light: digging ${where} at depth ${depth} the miners opened a magma flow, running ${plural(squares.length, "square")} to the page's edge${tieNote}.` : `The sound of water ${where} at depth ${depth}: an underground river, running ${plural(squares.length, "square")} to the page's edge${tieNote}.`;
+        text += flood(state2, squares, liquid, spills);
+        write(state2, text, r);
+        return;
+      }
+      case "cavern": {
+        const { size, note } = rollSize(state2, entry.size);
+        const shape2 = growShape(state2, x, y, size);
+        const group = state2.nextId++;
+        placeShape(state2, shape2, () => ({ type: "cavern", feature: "cave", group, found: { card: card.id } }));
+        write(state2, `The wall gave way ${where} at depth ${depth} onto an open cavern, ${plural(shape2.length, "grid space")} wide (${note}).`, r);
+        return;
+      }
+      case "crystal": {
+        const { size, note } = rollSize(state2, entry.size);
+        const shape2 = growShape(state2, x, y, size);
+        const group = state2.nextId++;
+        placeShape(state2, shape2, () => ({ type: "crystal", feature: "crystal", group, found: { card: card.id } }));
+        write(state2, `Lamplight exploded into a thousand colours ${where} at depth ${depth}: a crystal cavern, ${plural(shape2.length, "grid space")} (${note}). Each turn it will yield \u2666; it can be crossed but never built in.`, r);
+        return;
+      }
+      case "lake": {
+        const { size, note } = rollSize(state2, entry.size);
+        const shape2 = growShape(state2, x, y, size);
+        placeShape(state2, shape2, () => ({ type: "cavern", feature: "lake", liquid: entry.liquid, found: { card: card.id } }));
+        let text = `Still black water ${where} at depth ${depth}: an underground lake, ${plural(shape2.length, "grid space")} (${note}).`;
+        text += flood(state2, shape2, entry.liquid, spills);
+        write(state2, text, r);
+        return;
+      }
+      case "lair":
+        return lairFind(state2, x, y, card, entry, depth, where, r);
+      case "volcanicShaft": {
+        const bottom = (Math.floor(y / PAGE_H) + 1) * PAGE_H - 1;
+        const squares = [{ x, y }];
+        for (let ny = y + 1; ny <= bottom && !getCell(state2, x, ny); ny++) squares.push({ x, y: ny });
+        placeShape(state2, squares, () => ({ type: "cavern", feature: "volcanic", noBuild: true, found: { card: card.id } }));
+        const last = squares[squares.length - 1];
+        if (getCell(state2, x, last.y + 1)) setLink(state2, x, last.y, "shaft");
+        write(state2, `At depth ${depth} the floor fell away into a volcanic shaft, dormant for now, plunging ${plural(squares.length, "square")} to the bottom of the page.`, r);
+        return;
+      }
+      case "burrower":
+        return burrower(state2, x, y, card, entry, depth, where, r);
+      default:
+        throw new Error(`No handler for \u2663 ${entry.kind}`);
+    }
+  }
+  function flood(state2, squares, liquid, spills) {
+    if (!spills) {
+      return " It was found from above, so it stayed in its bed.";
+    }
+    const res = spreadLiquid(state2, squares, liquid);
+    let text = res.wet.length ? ` It spilled into ${plural(res.wet.length, "square")} of the hold${liquid === "lava" ? ", burning what it touched" : ""}.` : " It found nowhere to spill.";
+    if (res.lost) text += ` ${plural(res.lost, "dwarf")} drowned${liquid === "lava" ? " in fire" : ""}.`;
+    if (res.wet.length) text += ` Drain each square for ${liquid === "lava" ? "20\u2666 (and the room is left damaged)" : "5\u2666"}.`;
+    return text;
+  }
+  function lairFind(state2, x, y, card, entry, depth, where, r) {
+    const { size, note } = rollSize(state2, entry.size);
+    const shape2 = growShape(state2, x, y, size);
+    const kind = entry.prompt ? pickPrompt(state2, PROMPTS[entry.prompt]) : null;
+    const foe = entry.foe || (entry.prompt === "court" ? COURT_FOES[kind] : kind);
+    const baseStr = entry.str || shape2.length * entry.strPerSpace;
+    const lair = createLair(state2, shape2, {
+      card: card.id,
+      entry,
+      name: entry.prompt === "court" ? `${entry.name}: ${kind}` : entry.name,
+      foe,
+      baseStr,
+      depth
+    });
+    const sizeText = shape2.length > 1 || note ? `, ${plural(shape2.length, "grid space")}${note ? ` (${note})` : ""}` : "";
+    const strText = `${baseStr} STR + ${5 * depth} for depth = ${lair.str} STR`;
+    const lines = {
+      S: {
+        A: `Smoke and chatter ${where} at depth ${depth}: a village of ${foe}${sizeText}. They poured out to raid the hold: ${strText}.`,
+        2: `Breaking through ${where} at depth ${depth}, the miners found a forgotten crypt. Its seals cracked, and the dead rose: ${foe}, ${strText}.`,
+        10: `Hammering ${where} at depth ${depth}: a golem forge, its ${foe} (${strText}) standing silent. They will not stir unless you try to claim the forge.`,
+        K: `Cold halls ${where} at depth ${depth}: a desolate court, a ${kind}${sizeText}. ${foe} rose from it: ${strText}.`
+      },
+      C: {
+        9: `A drone like a held breath ${where} at depth ${depth}: a hive of ${foe}${sizeText}. They swarmed out: ${strText}.`,
+        J: `Eyes in the dark ${where} at depth ${depth}: a ${foe} in its den (${strText}). It went for the nearest room.`,
+        Q: `Something vast breathed ${where} at depth ${depth}: the lair of a ${foe}, four grid spaces (${strText}). It will not leave unless attacked, but will attack anything entering its lair.`
+      }
+    };
+    write(state2, lines[card.suit][card.rank], r);
+    if (!entry.waits) startCombat(state2, [enemyFromLair(lair)]);
+  }
+  function burrower(state2, x, y, card, entry, depth, where, r) {
+    const foe = pickPrompt(state2, PROMPTS.burrower);
+    const lair = createLair(state2, [{ x, y }], { card: card.id, entry: { ...entry, behaviour: "march" }, name: entry.name, foe, baseStr: entry.str, depth });
+    const tunnel = [];
+    let p = { x, y };
+    let met = null;
+    const dig = (q) => {
+      state2.cells[key(q.x, q.y)] = { type: "cavern", feature: "tunnel", found: { card: card.id } };
+      tunnel.push(q);
+    };
+    for (; ; ) {
+      const up = { x: p.x, y: p.y - 1 };
+      if (up.y < 0) break;
+      const c = getCell(state2, up.x, up.y);
+      setLink(state2, p.x, up.y, "shaft");
+      if (c) {
+        met = up;
+        break;
+      }
+      dig(up);
+      p = up;
+    }
+    let turned = "";
+    if (!met) {
+      const d = rollD2(state2);
+      const nx = p.x + (d.roll === 1 ? -1 : 1);
+      turned = ` It reached the top of the hold and turned ${d.roll === 1 ? "left" : "right"} (1D2 rolled ${d.roll}).`;
+      let q = { x: nx, y: p.y };
+      if (getCell(state2, q.x, q.y)) met = q;
+      else {
+        dig(q);
+        const bottom = (Math.floor(q.y / PAGE_H) + 1) * PAGE_H - 1;
+        while (!met && q.y < bottom) {
+          const down = { x: q.x, y: q.y + 1 };
+          setLink(state2, q.x, q.y, "shaft");
+          if (getCell(state2, down.x, down.y)) {
+            met = down;
+            break;
+          }
+          dig(down);
+          q = down;
+        }
+        p = q;
+      }
+    }
+    const beastAt = tunnel.length ? tunnel[tunnel.length - 1] : { x, y };
+    write(state2, `The ground shook ${where} at depth ${depth}: a ${foe}, a burrowing beast (${entry.str} STR + ${5 * depth} for depth = ${lair.str} STR), clawed a tunnel ${plural(tunnel.length, "square")} long straight up.${turned}` + (met ? " It broke into the hold!" : " It found nothing and lay still at the bottom of its tunnel."), r);
+    if (met) startCombat(state2, [enemyFromLair(lair, beastAt)]);
   }
   function remnant(state2, x, y, card, depth, dir) {
-    let rank = card.rank;
-    let note = "";
-    if (!SPADES[rank].implemented) {
-      note = ` (The ${SPADES[rank].name} is ${SLICE_STAND_INS.S.note}.)`;
-      rank = SLICE_STAND_INS.S.suitRank;
+    const entry = SPADES[card.rank];
+    const r = ref(card.id, entry);
+    const where = hashPick(DIR_WORDS[dir], state2.turn, x, y);
+    switch (entry.kind) {
+      case "lair":
+        return lairFind(state2, x, y, card, entry, depth, where, r);
+      case "foundRoom": {
+        const cell = { type: "room", room: entry.room, found: { card: card.id } };
+        if (entry.room === "sealed") {
+          cell.closed = true;
+          cell.trapped = pickPrompt(state2, PROMPTS.trappedEvil);
+        }
+        state2.cells[key(x, y)] = cell;
+        connectNewSquare(state2, x, y);
+        const lines = {
+          well: `A wishing well ${where} at depth ${depth}, its water black and bottomless. Once a turn, 10\u2666 buys a wish, for good or ill.`,
+          sealed: `A sealed door ${where} at depth ${depth}, bound in chains and warning-runes. Something waits within. It stays shut until you choose to open it.`,
+          buriedTemple: `A buried temple ${where} at depth ${depth}, its altar still intact. A Cleric recruited here (8\u2666) may call on its power, once.`,
+          portal: `A demon portal ${where} at depth ${depth}, a wound in the air that hums at night. At the end of every turn it may open (1 on 1D4). To close it: 20\u2666 and the life of a Cleric.`
+        };
+        write(state2, lines[entry.room], r);
+        return;
+      }
+      case "mine": {
+        const { size, note } = rollSize(state2, entry.size);
+        const shape2 = growShape(state2, x, y, size);
+        placeShape(state2, shape2, () => ({ type: "cavern", feature: "mine", found: { card: card.id } }));
+        const amount = entry.haul + entry.haulPerDepth * depth;
+        const g = gain(state2, "diamonds", amount);
+        write(state2, `Old rails ${where} at depth ${depth}: an abandoned mine, ${plural(shape2.length, "grid space")} (${note}), its carts still loaded. ${entry.haul} + ${entry.haulPerDepth}\xD7${depth} = ${amount}\u2666; gained ${gainText("diamonds", g)}.`, r);
+        return;
+      }
+      case "abandonedRoom": {
+        openCavern(state2, x, y, { found: { card: card.id } });
+        state2.pending = { kind: "abandonedRoom", x, y, card: card.id };
+        write(state2, `Dressed stone ${where} at depth ${depth}: an abandoned room. Someone was here first. Choose what it once was.`, r);
+        return;
+      }
+      case "ancientLibrary": {
+        const { size, note } = rollSize(state2, entry.size);
+        const shape2 = growShape(state2, x, y, size);
+        placeShape(state2, shape2, () => ({ type: "room", room: "ancientLibrary", found: { card: card.id } }));
+        write(state2, `Shelves of crumbling scrolls ${where} at depth ${depth}: an ancient library, ${plural(shape2.length, "grid space")} (${note}).`, r);
+        magicByD2(state2, "The scholars read aloud from it");
+        return;
+      }
+      case "artefact": {
+        openCavern(state2, x, y, { found: { card: card.id } });
+        state2.pending = { kind: "artefact", card: card.id, bonus: entry.bonus };
+        write(state2, `Wrapped in rotten cloth ${where} at depth ${depth}: a long lost artefact, ancient weapon or armour. Choose a unit room to house it: every Troop from there fights with +${entry.bonus} STR.`, r);
+        return;
+      }
+      case "wyrm": {
+        createLair(state2, [{ x, y }], {
+          card: card.id,
+          entry: { behaviour: "sleep", waits: true },
+          name: entry.name,
+          foe: entry.foe,
+          baseStr: entry.str,
+          depth,
+          extra: { wyrm: true, ranged: true, damagesRooms: true, steal: entry.steal }
+        });
+        write(state2, `Gold ${where} at depth ${depth}, heaped high, and on it an ancient dragon, asleep. Once a turn you may steal 20\u2666 from its hoard, but on a 1 (1D4) it wakes: ${entry.str} STR + ${5 * depth} for depth, Ranged.`, r);
+        return;
+      }
+      default:
+        throw new Error(`No handler for \u2660 ${entry.kind}`);
     }
-    const entry = SPADES[rank];
-    state2.cells[key(x, y)] = { type: "lair", lair: { card: card.id, entry: rank } };
-    connectNewSquare(state2, x, y);
-    const str = entry.enemy.str + 5 * depth;
+  }
+
+  // src/engine/game.js
+  var MANAGE = ["trade", "build", "recruit"];
+  function newGame({ seed = Date.now() % 2147483647, holdName = "the Hold", options = {} } = {}) {
+    const state2 = {
+      version: 1,
+      holdName,
+      seed,
+      rng: seed | 0,
+      turn: 1,
+      phase: "explore",
+      res: { hearts: 20, diamonds: 20 },
+      cells: {},
+      links: {},
+      housing: {},
+      lairs: {},
+      artefacts: [],
+      unlocks: {},
+      pending: null,
+      deck: { stack: [], drawn: [], jokersIn: false, heldOut: {} },
+      flags: { traded: false, roomBuilt: false, used: {} },
+      combat: null,
+      chronicle: [],
+      stats: { maxDepth: 1, roomsBuilt: 0, kills: [], unitsLost: 0, turnsSurvived: 0 },
+      lastCard: null,
+      lastDraws: [],
+      over: null,
+      options: { worldLayers: false, ...options },
+      nextId: 1
+    };
+    const ek = key(ENTRANCE.x, ENTRANCE.y);
+    state2.cells[ek] = { type: "entrance", room: "entrance" };
+    state2.housing[ek] = { unit: "soldier", count: 5 };
     write(
       state2,
-      `Breaking through ${hashPick(DIR_WORDS[dir], state2.turn, x, y)} at depth ${depth}, the miners found a forgotten crypt. Its seals cracked, and the dead rose: ${entry.enemy.name}, ${entry.enemy.str} STR + ${5 * depth} for depth = ${str} STR.${note}`,
-      { card: card.id, page: SPADES[card.rank].page, title: `${cardLabel(card.id)} \u2014 ${SPADES[card.rank].name}`, quote: SPADES[card.rank].text }
+      `The first stones of ${holdName} were laid: a stairwell cut into the mountainside, twenty loads of resources, twenty of trade goods, and five Soldiers standing guard at the Entrance.`,
+      { page: 2, title: "Starting the game", quote: "To start your hold draw a stairwell at the centre of the top row of your grid paper. This is the Entrance of your hold. \u2026 note that you have 20 of each to start. \u2026 note that you have five Soldiers (page 6) at the Entrance." }
     );
-    startCombat(state2, [{
-      name: entry.enemy.name,
-      baseStr: entry.enemy.str,
-      str,
-      x,
-      y,
-      lair: key(x, y)
-    }]);
+    return state2;
+  }
+  function upgrade(state2) {
+    state2.lairs = state2.lairs || {};
+    for (const [k, c] of Object.entries(state2.cells)) {
+      if (c.type !== "lair" || typeof c.lair !== "object") continue;
+      const id = `L${state2.nextId++}`;
+      const depth = depthOf(parseKey(k).y);
+      state2.lairs[id] = {
+        id,
+        card: c.lair.card,
+        entryKey: "S2",
+        name: "Forgotten crypt",
+        foe: "Undead",
+        baseStr: 20,
+        str: 20 + 5 * depth,
+        squares: [k],
+        home: k,
+        behaviour: "march",
+        clearsTo: "crypt",
+        thief: 0
+      };
+      for (const e of state2.combat && state2.combat.enemies || []) if (e.lair === k) {
+        e.lairId = id;
+        e.behaviour = "march";
+      }
+      c.lair = id;
+    }
+    if (state2.combat) {
+      state2.combat.enemyShots = state2.combat.enemyShots || [];
+      state2.combat.skullDeaths = state2.combat.skullDeaths || {};
+      state2.combat.after = state2.combat.after || "trade";
+    }
+    state2.artefacts = state2.artefacts || [];
+    state2.unlocks = state2.unlocks || {};
+    state2.lastDraws = state2.lastDraws || [];
+    state2.flags.used = state2.flags.used || {};
+    if (state2.pending === void 0) state2.pending = null;
+    return state2;
+  }
+  var HOLD_ACTIONS = {
+    useWell,
+    stealHoard,
+    openSealed,
+    templeCleric,
+    destroyPortal,
+    attackLair,
+    drainSquare,
+    repair
+  };
+  function apply(prev, action) {
+    if (prev.over) throw new GameError("This hold\u2019s story is over.");
+    const state2 = upgrade(JSON.parse(JSON.stringify(prev)));
+    if (state2.pending && !["choose"].includes(action.type)) {
+      throw new GameError(state2.pending.kind === "artefact" ? "First choose a room for the artefact." : "First choose what the abandoned room was.");
+    }
+    switch (action.type) {
+      case "explore":
+        explore(state2, action);
+        break;
+      case "skipExplore":
+        skipExplore(state2);
+        break;
+      case "trade":
+        trade(state2, action);
+        break;
+      case "build":
+        build(state2, action);
+        break;
+      case "recruit":
+        recruit(state2, action);
+        break;
+      case "endTurn":
+        endTurn(state2);
+        break;
+      case "choose":
+        choose(state2, action);
+        break;
+      case "moveTroop":
+      case "fire":
+      case "endRound":
+      case "withdraw":
+        if (state2.phase !== "combat") throw new GameError("There is no fight going on.");
+        combatAction(state2, action);
+        break;
+      default: {
+        const fn = HOLD_ACTIONS[action.type];
+        if (!fn) throw new GameError(`Unknown action ${action.type}`);
+        requirePhase(state2, MANAGE, "do that");
+        fn(state2, action);
+      }
+    }
+    if (state2.phase === "combat" && !state2.combat && !state2.over) {
+      if (state2.afterCombat === "newTurn") startTurn(state2);
+      else state2.phase = MANAGE.includes(state2.afterCombat) ? state2.afterCombat : "trade";
+    } else if (state2.combat && !state2.over) {
+      state2.phase = "combat";
+    }
+    return state2;
+  }
+  function requirePhase(state2, allowed, verb) {
+    if (!allowed.includes(state2.phase)) {
+      throw new GameError(`You can\u2019t ${verb} during the ${state2.phase} step.`);
+    }
+  }
+  function dirFrom(state2, x, y) {
+    for (const d of DIRS) {
+      const from = getCell(state2, x - d.dx, y - d.dy);
+      if (isHoldCell(from)) return d.name;
+    }
+    return "down";
+  }
+  function explore(state2, { x, y }) {
+    requirePhase(state2, ["explore"], "explore");
+    const ok = explorableSquares(state2).some((p) => p.x === x && p.y === y);
+    if (!ok) throw new GameError("You can only explore an unexplored square next to your hold.");
+    const depth = depthOf(y);
+    const dir = dirFrom(state2, x, y);
+    state2.lastDraws = [];
+    let id = drawCard(state2);
+    let card = parseCard(id);
+    while (!card.joker && card.suit === "S" && depth === 1) {
+      write(
+        state2,
+        `At depth 1 the ${cardLabel(id)} was turned aside; the overseer bid the miners dig on.`,
+        { card: id, ...RULES.spadeAtDepth1, quote: RULES.spadeAtDepth1.text }
+      );
+      id = drawCard(state2);
+      card = parseCard(id);
+    }
+    state2.lastCard = { id, x, y, depth };
+    state2.stats.maxDepth = Math.max(state2.stats.maxDepth, depth);
+    if (card.joker) {
+      state2.cells[key(x, y)] = { type: "cavern", feature: "cave", found: { card: id } };
+      connectNewSquare(state2, x, y);
+      write(state2, `A strange card, the ${card.name}, came up. Its legend is not yet written into this game.`);
+    } else if (card.suit === "H" || card.suit === "D") {
+      mineResources(state2, x, y, card, depth, dir);
+    } else if (card.suit === "C") {
+      naturalFormation(state2, x, y, card, depth, dir);
+    } else {
+      remnant(state2, x, y, card, depth, dir);
+    }
+    state2.phase = state2.combat ? "combat" : "trade";
+  }
+  function skipExplore(state2) {
+    requirePhase(state2, ["explore"], "skip exploring");
+    if (explorableSquares(state2).length) throw new GameError("There is still rock to dig: you must explore.");
+    state2.lastDraws = [];
+    write(state2, "There was nowhere left to dig: water, fire or foes hemmed the hold in. The miners rested.");
+    state2.phase = "trade";
+  }
+  function cardIncome(state2, card, depth) {
+    const flat = 0;
+    const mult = 1;
+    return (card.value + flat) * mult + depth;
+  }
+  function mineResources(state2, x, y, card, depth, dir) {
+    const kind = card.suit === "H" ? "hearts" : "diamonds";
+    const amount = cardIncome(state2, card, depth);
+    state2.cells[key(x, y)] = { type: "cavern", feature: "cave", found: { card: card.id } };
+    connectNewSquare(state2, x, y);
+    const { gained, lost } = gain(state2, kind, amount);
+    const sym = SUITS[card.suit].symbol;
+    const opener = hashPick(MINING_LINES[kind], state2.turn, x, y);
+    const where = hashPick(DIR_WORDS[dir], state2.turn, x);
+    let text = `Digging ${where} at depth ${depth}: ${opener}. ${cardLabel(card.id)}: ${card.value} + ${depth} for depth = ${amount}${sym}.`;
+    if (lost) text += ` The storerooms could hold only ${gained}; ${lost}${sym} was left in the dark (cap ${capOf(state2, kind)}).`;
+    const rule = RULES[kind];
+    write(state2, text, { card: card.id, page: rule.page, title: rule.title, quote: rule.text });
+  }
+  function chooseOptions(state2) {
+    const p = state2.pending;
+    if (!p) return [];
+    if (p.kind === "abandonedRoom") {
+      return Object.entries(ROOMS).filter(([, r]) => r.implemented).map(([id, r]) => ({ id, label: r.name }));
+    }
+    if (p.kind === "artefact") {
+      return Object.keys(state2.cells).map(parseKey).filter((q) => housingFor(state2, q.x, q.y)).map((q) => ({ id: key(q.x, q.y), label: `${housingFor(state2, q.x, q.y).def.name} (depth ${depthOf(q.y)})` }));
+    }
+    return [];
+  }
+  function choose(state2, { option }) {
+    const p = state2.pending;
+    if (!p) throw new GameError("There is nothing to choose.");
+    if (!chooseOptions(state2).some((o) => o.id === option)) throw new GameError("That isn\u2019t one of the choices.");
+    if (p.kind === "abandonedRoom") {
+      const def = ROOMS[option];
+      state2.cells[key(p.x, p.y)] = { type: "room", room: option, found: { card: p.card } };
+      if (option === "stairs" && getCell(state2, p.x, p.y - 1)) setLink(state2, p.x, p.y - 1, "stairs");
+      write(
+        state2,
+        `The abandoned room had once been a ${def.name}. With a little sweeping, it was so again.`,
+        { page: def.page, title: def.name, quote: def.text }
+      );
+    } else if (p.kind === "artefact") {
+      const h = housingFor(state2, ...option.split(",").map(Number));
+      state2.artefacts.push({ home: option, bonus: p.bonus, card: p.card });
+      write(
+        state2,
+        `The artefact was hung in the ${h.def.name}. Troops from there now fight with +${p.bonus} STR.`,
+        { card: p.card, page: SPADES.J.page, title: SPADES.J.name, quote: SPADES.J.text }
+      );
+    }
+    state2.pending = null;
   }
   function trade(state2, { give, amount }) {
     requirePhase(state2, ["trade"], "trade");
@@ -1723,22 +2638,27 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     if (give === "hearts") {
       if (amount % 2) throw new GameError("Resources trade in pairs: 2\u2665 buys 1\u2666.");
       state2.res.hearts -= amount;
-      const { gained, lost } = gain(state2, "diamonds", amount / 2);
-      text = `The quartermasters sent ${amount}\u2665 up to market and brought back ${gained}\u2666` + (lost ? ` (${lost}\u2666 more than the vaults could hold was lost)` : "") + ".";
+      const g = gain(state2, "diamonds", amount / 2);
+      text = `The quartermasters sent ${amount}\u2665 up to market and brought back ${gainText("diamonds", g)}.`;
     } else if (give === "diamonds") {
       state2.res.diamonds -= amount;
-      const { gained, lost } = gain(state2, "hearts", amount * 2);
-      text = `${amount}\u2666 were traded away for ${gained}\u2665 of stone, timber and iron` + (lost ? ` (${lost}\u2665 would not fit in the stores)` : "") + ".";
+      const g = gain(state2, "hearts", amount * 2);
+      text = `${amount}\u2666 were traded away for ${gainText("hearts", g)} of stone, timber and iron.`;
     } else {
       throw new GameError("Trade \u2665 or \u2666.");
     }
     state2.flags.traded = true;
     write(state2, text, { page: RULES.trading.page, title: RULES.trading.title, quote: RULES.trading.text });
   }
+  function canBuildOn(target, roomId) {
+    if (!target) return true;
+    if (target.type !== "cavern" || target.noBuild || target.gas) return false;
+    if (target.liquid) return target.liquid === "water" && roomId === "corridor";
+    return true;
+  }
   function buildableSquares(state2, roomId) {
     const def = ROOMS[roomId];
     if (!def) return [];
-    const out = [];
     const consider = /* @__PURE__ */ new Map();
     for (const [k, c] of Object.entries(state2.cells)) {
       if (!isHoldCell(c)) continue;
@@ -1749,15 +2669,17 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
         const ny = y + d.dy;
         if (ny < 0) continue;
         const nk = key(nx, ny);
-        const target = state2.cells[nk];
-        if (target && target.type !== "cavern") continue;
-        if (target && target.flooded) continue;
+        if (!canBuildOn(state2.cells[nk], roomId)) continue;
         const okDir = def.placement === "sideways" ? d.dy === 0 : def.placement === "below" ? d.dy === 1 : true;
         if (okDir) consider.set(nk, { x: nx, y: ny });
       }
     }
-    for (const p of consider.values()) out.push(p);
-    return out;
+    return [...consider.values()];
+  }
+  function buildCost(state2, room, x, y) {
+    const target = getCell(state2, x, y);
+    if (target && target.feature === "forest") return {};
+    return ROOMS[room].cost;
   }
   function build(state2, { x, y, room }) {
     requirePhase(state2, ["trade", "build"], "build");
@@ -1768,17 +2690,24 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     if (!buildableSquares(state2, room).some((p) => p.x === x && p.y === y)) {
       throw new GameError(def.placement === "sideways" ? "Corridors go to the left or right of a room or cavern." : def.placement === "below" ? "Stairs go below a room or cavern." : "Rooms must be built on an unexplored square or empty cavern next to your hold.");
     }
-    pay(state2, def.cost);
+    const cost = buildCost(state2, room, x, y);
+    pay(state2, cost);
     state2.phase = "build";
     const k = key(x, y);
-    const wasCavern = !!state2.cells[k];
+    const was = state2.cells[k];
     state2.cells[k] = { type: "room", room, built: state2.turn };
+    if (was && was.liquid === "water") state2.cells[k].bridge = true;
     if (room === "stairs") setLink(state2, x, y - 1, "stairs");
-    else if (!wasCavern) connectNewSquare(state2, x, y);
+    else if (!was) connectNewSquare(state2, x, y);
     state2.flags.roomBuilt = true;
     if (def.countsForScore) state2.stats.roomsBuilt += 1;
     state2.stats.maxDepth = Math.max(state2.stats.maxDepth, depthOf(y));
-    write(state2, `${roomPhrase(room)} at depth ${depthOf(y)}${wasCavern ? ", carved from an empty cavern" : ""} (${costText(def.cost)}).`, { page: def.page, title: def.name, quote: def.text });
+    const how = !was ? "" : was.feature === "forest" ? ", the forest felled for its timber" : was.liquid ? ", bridging the water" : ", carved from an empty cavern";
+    write(
+      state2,
+      `${roomPhrase(room)} at depth ${depthOf(y)}${how} (${costText(cost)}).`,
+      { page: def.page, title: def.name, quote: def.text }
+    );
   }
   function roomPhrase(room) {
     return {
@@ -1799,7 +2728,7 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     return { def, houses: def.houses, unit: h.unit, count: h.count, capacity: def.houses.capacity };
   }
   function recruit(state2, { x, y, unit, count = 1 }) {
-    requirePhase(state2, ["trade", "build", "recruit"], "recruit");
+    requirePhase(state2, MANAGE, "recruit");
     const u = UNITS[unit];
     if (!u || !u.implemented) throw new GameError("That unit can\u2019t be recruited yet.");
     const h = housingFor(state2, x, y);
@@ -1817,13 +2746,250 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     pay(state2, cost);
     state2.phase = "recruit";
     state2.housing[key(x, y)] = { unit, count: h.count + count };
-    write(state2, `${count} ${count === 1 ? u.name : u.plural} answered the call and took up quarters in the ${h.def.name} (${costText(cost)}).`, { page: RULES.recruiting.page, title: RULES.recruiting.title, quote: RULES.recruiting.text });
+    const verb = unit === "skullDwarf" ? "were summoned from their tombs into" : "answered the call and took up quarters in";
+    write(
+      state2,
+      `${count} ${count === 1 ? u.name : u.plural} ${verb} the ${h.def.name} (${costText(cost)}).`,
+      { page: RULES.recruiting.page, title: RULES.recruiting.title, quote: RULES.recruiting.text }
+    );
+  }
+  function holdActions(state2) {
+    if (!MANAGE.includes(state2.phase) || state2.pending) return [];
+    const out = [];
+    const used = state2.flags.used || {};
+    for (const [k, c] of Object.entries(state2.cells)) {
+      const { x, y } = parseKey(k);
+      const d = depthOf(y);
+      const reach = isConnected(state2, x, y) || adjacentToHold(state2, x, y);
+      if (c.room === "well" && reach) {
+        out.push({ type: "useWell", x, y, label: `Make a wish at the well (depth ${d})`, cost: SPADES[3].useCost, disabled: used[`well${k}`] ? "used this turn" : null });
+      }
+      if (c.room === "sealed" && reach) out.push({ type: "openSealed", x, y, label: `Open the sealed room (depth ${d})`, cost: {} });
+      if (c.room === "buriedTemple" && reach && !c.used) {
+        out.push({ type: "templeCleric", x, y, label: `Recruit a Cleric at the buried temple (depth ${d})`, cost: SPADES[6].clericCost });
+      }
+      if (c.room === "portal" && reach) {
+        const cleric = findCleric(state2);
+        out.push({ type: "destroyPortal", x, y, label: `Close the demon portal (depth ${d}): 20\u2666 and a Cleric\u2019s life`, cost: SPADES[9].destroyCost, disabled: cleric ? null : "needs a Cleric" });
+      }
+      if (isWet(c) || c.gas) {
+        if (reach) out.push({ type: "drainSquare", x, y, label: `Drain the ${c.liquid || (c.gas ? `${c.gas} gas` : "water")} at depth ${d}`, cost: drainCost(c) });
+      }
+      if (c.damaged && reach) {
+        out.push({ type: "repair", x, y, label: `Repair the ${roomDef(c).name} at depth ${d}`, cost: repairCost(c) });
+      }
+    }
+    for (const lair of Object.values(state2.lairs)) {
+      const { x, y } = parseKey(lair.home);
+      if (!adjacentToHold(state2, x, y) && !lair.squares.some((k) => adjacentToHold(state2, ...k.split(",").map(Number)))) continue;
+      if (lair.wyrm) {
+        out.push({ type: "stealHoard", x, y, label: `Steal 20\u2666 from the sleeping Wyrm (depth ${depthOf(y)})`, cost: {}, disabled: used[`wyrm${lair.id}`] ? "stolen this turn" : null });
+      }
+      const verb = lair.wyrm ? "Attack the Wyrm" : lair.clearsTo === "golemForge" ? "Claim the golem forge" : `Attack the ${lair.foe}`;
+      out.push({ type: "attackLair", x, y, label: `${verb} (${lair.str} STR, depth ${depthOf(y)})`, cost: {} });
+    }
+    return out.map((a) => ({ ...a, disabled: a.disabled || (canAfford(state2, a.cost) ? null : `needs ${costText(a.cost)}`) }));
+  }
+  function adjacentToHold(state2, x, y) {
+    return DIRS.some((d) => isHoldCell(getCell(state2, x + d.dx, y + d.dy)) && isConnected(state2, x + d.dx, y + d.dy));
+  }
+  function requireAction(state2, type, x, y) {
+    const a = holdActions(state2).find((o) => o.type === type && o.x === x && o.y === y);
+    if (!a) throw new GameError("You can\u2019t do that there.");
+    if (a.disabled) throw new GameError(`Not now: ${a.disabled}.`);
+    return a;
+  }
+  function useWell(state2, { x, y }) {
+    const a = requireAction(state2, "useWell", x, y);
+    pay(state2, a.cost);
+    state2.flags.used[`well${key(x, y)}`] = true;
+    state2.lastDraws = [];
+    write(
+      state2,
+      "A coin of 10\u2666 dropped into the wishing well, and something answered.",
+      { page: SPADES[3].page, title: SPADES[3].name, quote: SPADES[3].text }
+    );
+    const { roll } = rollD2(state2);
+    drawOnTable(state2, roll === 1 ? "good" : "bad", `The well (1D2 rolled ${roll}) gave`);
+  }
+  function stealHoard(state2, { x, y }) {
+    requireAction(state2, "stealHoard", x, y);
+    const lair = Object.values(state2.lairs).find((l) => l.home === key(x, y));
+    state2.flags.used[`wyrm${lair.id}`] = true;
+    const g = gain(state2, "diamonds", lair.steal);
+    const { roll } = rollD4(state2);
+    if (roll === 1) {
+      write(
+        state2,
+        `The thieves crept onto the hoard and came back with ${gainText("diamonds", g)}, but the 1D4 rolled 1. An eye opened. The Wyrm awoke, and the hoard was lost in its fury (${lair.str} STR, Ranged).`,
+        { page: SPADES.Q.page, title: SPADES.Q.name, quote: SPADES.Q.text }
+      );
+      wakeWyrm(state2, lair);
+    } else {
+      write(
+        state2,
+        `Thieves crept across the sleeping Wyrm's hoard and came back with ${gainText("diamonds", g)} (1D4 rolled ${roll}). It slept on.`,
+        { page: SPADES.Q.page, title: SPADES.Q.name, quote: SPADES.Q.text }
+      );
+    }
+  }
+  function wakeWyrm(state2, lair) {
+    lair.behaviour = "march";
+    lair.steal = 0;
+    const e = enemyFromLair(lair);
+    e.behaviour = "march";
+    startCombat(state2, [e], { after: state2.phase });
+  }
+  function openSealed(state2, { x, y }) {
+    requireAction(state2, "openSealed", x, y);
+    const cell = getCell(state2, x, y);
+    state2.cells[key(x, y)] = { type: "room", room: "openedRoom", found: cell.found };
+    state2.lastDraws = [];
+    write(
+      state2,
+      `The chains were struck from the sealed room. Within: a ${cell.trapped || "nameless evil"}.`,
+      { page: SPADES[4].page, title: SPADES[4].name, quote: SPADES[4].text }
+    );
+    drawOnTable(state2, "bad", "It unleashed");
+  }
+  function findCleric(state2) {
+    return Object.entries(state2.housing).find(([, h]) => h.unit === "cleric" && h.count > 0);
+  }
+  function templeCleric(state2, { x, y }) {
+    const a = requireAction(state2, "templeCleric", x, y);
+    pay(state2, a.cost);
+    const k = key(x, y);
+    state2.cells[k].used = true;
+    state2.housing[k] = { unit: "cleric", count: 1 };
+    state2.lastDraws = [];
+    const { roll } = rollD4(state2);
+    write(
+      state2,
+      `A Cleric took vows at the buried temple (8\u2666) and prayed at its altar (1D4 rolled ${roll}).`,
+      { page: SPADES[6].page, title: SPADES[6].name, quote: SPADES[6].text }
+    );
+    drawOnTable(state2, roll === 4 ? "good" : "bad", "The temple answered with");
+  }
+  function destroyPortal(state2, { x, y }) {
+    const a = requireAction(state2, "destroyPortal", x, y);
+    const [ck, h] = findCleric(state2);
+    pay(state2, a.cost);
+    h.count -= 1;
+    state2.stats.unitsLost += 1;
+    state2.cells[key(x, y)] = { type: "cavern", feature: "ruins", found: getCell(state2, x, y).found };
+    write(
+      state2,
+      `For 20\u2666 and the life of the Cleric from the ${roomDef(state2.cells[ck]).name}, the demon portal was sealed forever.`,
+      { page: SPADES[9].page, title: SPADES[9].name, quote: SPADES[9].text }
+    );
+  }
+  function attackLair(state2, { x, y }) {
+    requireAction(state2, "attackLair", x, y);
+    const lair = Object.values(state2.lairs).find((l) => l.home === key(x, y));
+    if (lair.wyrm) {
+      write(state2, "The Overseer sent Troops against the sleeping Wyrm. It woke.", { page: SPADES.Q.page, title: SPADES.Q.name, quote: SPADES.Q.text });
+      return wakeWyrm(state2, lair);
+    }
+    const e = enemyFromLair(lair);
+    if (e.behaviour === "raid") e.behaviour = "guard";
+    write(state2, `The Overseer sent Troops against the ${lair.foe} (${lair.str} STR).`);
+    startCombat(state2, [e], { after: state2.phase });
+  }
+  function drainSquare(state2, { x, y }) {
+    const a = requireAction(state2, "drainSquare", x, y);
+    pay(state2, a.cost);
+    const { wasLava } = drain(state2, x, y);
+    write(
+      state2,
+      `The square at depth ${depthOf(y)} was drained (${costText(a.cost)})${wasLava ? "; the lava left the room damaged" : ""}.`,
+      { page: 5, title: "Draining", quote: "Rooms filled by liquid or gas can be drained at a cost of 5\u2666. Lava can be drained for 20\u2666, but treat that room as damaged after it is drained." }
+    );
+  }
+  function repairCost(cell) {
+    const cost = (ROOMS[cell.room] || {}).cost || {};
+    return { hearts: Math.floor((cost.hearts || 0) / 2), diamonds: Math.floor((cost.diamonds || 0) / 2) };
+  }
+  function repair(state2, { x, y }) {
+    const a = requireAction(state2, "repair", x, y);
+    pay(state2, a.cost);
+    const cell = getCell(state2, x, y);
+    delete cell.damaged;
+    write(
+      state2,
+      `The ${roomDef(cell).name} at depth ${depthOf(y)} was repaired (${costText(a.cost)}).`,
+      { page: 5, title: "Repairing", quote: "To repair a damaged room, pay \xBD of the room\u2019s cost (rounded down) from your supply." }
+    );
   }
   function endTurn(state2) {
-    requirePhase(state2, ["trade", "build", "recruit"], "end the turn");
+    requirePhase(state2, MANAGE, "end the turn");
     state2.stats.turnsSurvived += 1;
+    const spawns = [];
+    for (const [k, c] of Object.entries(state2.cells)) {
+      if (c.room !== "portal") continue;
+      const { x, y } = parseKey(k);
+      const { roll } = rollD4(state2);
+      const spec = SPADES[9].spawn;
+      if (roll === spec.onRoll) {
+        const str = spec.str + 5 * depthOf(y);
+        spawns.push({ name: spec.foe, baseStr: spec.str, str, x, y, behaviour: "march" });
+        write(
+          state2,
+          `At the turn's end the demon portal at depth ${depthOf(y)} tore open (1D4 rolled 1): ${spec.foe}, ${spec.str} + ${5 * depthOf(y)} for depth = ${str} STR!`,
+          { page: SPADES[9].page, title: SPADES[9].name, quote: SPADES[9].text }
+        );
+      }
+    }
+    if (spawns.length) {
+      startCombat(state2, spawns, { after: "newTurn" });
+      state2.phase = "combat";
+      return;
+    }
+    startTurn(state2);
+  }
+  function startTurn(state2) {
     state2.turn += 1;
-    state2.flags = { traded: false, roomBuilt: false };
+    state2.flags = { traded: false, roomBuilt: false, used: {} };
+    state2.lastDraws = [];
+    state2.afterCombat = null;
+    const notes = [];
+    const forests = Object.entries(state2.cells).filter(([k, c]) => c.feature === "forest" && isConnected(state2, ...k.split(",").map(Number)));
+    if (forests.length) {
+      const per = CLUBS.A.incomePerTurn.hearts;
+      const g = gain(state2, "hearts", per * forests.length);
+      notes.push(`the forest${forests.length > 1 ? "s" : ""} gave ${gainText("hearts", g)}`);
+    }
+    const groups = /* @__PURE__ */ new Map();
+    for (const [k, c] of Object.entries(state2.cells)) {
+      if (c.type !== "crystal") continue;
+      const p = parseKey(k);
+      if (!groups.has(c.group) || p.y < groups.get(c.group).y) groups.set(c.group, p);
+    }
+    for (const [group, p] of groups) {
+      let card;
+      do {
+        card = parseCard(drawCard(state2, "Crystal cavern"));
+      } while (card.joker);
+      if (card.id === "AD") {
+        for (const c of Object.values(state2.cells)) {
+          if (c.type === "crystal" && c.group === group) {
+            c.type = "cavern";
+            c.feature = "ruins";
+          }
+        }
+        notes.push(`the crystal cavern at depth ${depthOf(p.y)} drew the A\u2666 and shattered`);
+      } else {
+        const amount = card.value + depthOf(p.y);
+        const g = gain(state2, "diamonds", amount);
+        notes.push(`the crystal cavern at depth ${depthOf(p.y)} drew ${cardLabel(card.id)} for ${gainText("diamonds", g)}`);
+      }
+    }
+    if (notes.length) {
+      write(
+        state2,
+        `As turn ${state2.turn} began, ${notes.join("; ")}.`,
+        { page: 44, title: "Start of turn", quote: "Draw a card for any Crystal Caverns in your hold." }
+      );
+    }
     state2.phase = "explore";
   }
   function scoreBreakdown(state2) {
@@ -1856,7 +3022,8 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     oxblood: "#7b2219",
     moss: "#5f7a3b",
     lava: "#d0531c",
-    wood: "#a26b33"
+    wood: "#a26b33",
+    crystal: "#7f93a0"
   };
   function rand(seed) {
     let t = seed | 0;
@@ -2045,33 +3212,272 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       return out;
     }
   };
-  function lairArt(cell, seed) {
+  var FOUND_ART = {
+    well(seed) {
+      let out = line(roughLine(14, 22, 14, 44, seed, 0.5), 2, C.wood) + line(roughLine(50, 22, 50, 44, seed + 1, 0.5), 2, C.wood);
+      out += shape("M10,24 L32,12 L54,24Z", C.oxblood, 1.4);
+      out += line("M32,24 v12", 1, C.ink) + shape(roughRect(29, 34, 6, 6, seed + 2, 0.4, 3), C.wood, 1);
+      out += `<ellipse cx="32" cy="46" rx="20" ry="5" fill="${C.ink}"/>`;
+      out += shape(`M12,46 v8 q20,6 40,0 v-8 q-20,6 -40,0Z`, C.stone, 1.5);
+      for (let x = 16; x < 50; x += 7) out += line(`M${x},49 v6`, 0.8);
+      return out;
+    },
+    sealed(seed) {
+      let out = shape(roughRect(18, 12, 28, 44, seed, 0.8, 6), C.wood, 1.8);
+      out += shape("M18,12 q14,-8 28,0", "none", 1.8);
+      out += line(roughLine(14, 16, 50, 52, seed + 1, 1), 2.2, C.slate) + line(roughLine(50, 16, 14, 52, seed + 2, 1), 2.2, C.slate);
+      out += `<circle cx="32" cy="34" r="5" fill="${C.ochre}" stroke="${C.ink}" stroke-width="1.4"/>`;
+      out += line("M30,24 l2,-4 l2,4 M24,44 l3,3 M40,44 l-3,3", 1, C.oxblood);
+      return out;
+    },
+    openedRoom(seed) {
+      let out = shape(roughRect(18, 12, 28, 44, seed, 0.8, 6), C.ink, 1.8);
+      out += shape("M18,12 l-8,6 v42 l8,-4Z", C.wood, 1.4);
+      out += line(roughLine(8, 56, 30, 58, seed + 1, 1), 1.6, C.slate);
+      return out;
+    },
+    buriedTemple(seed) {
+      let out = shape("M10,22 L32,9 L54,22Z", C.stone, 1.6);
+      out += shape(roughRect(10, 22, 44, 4, seed, 0.5, 6), C.stone, 1.3);
+      for (const x of [14, 26, 38]) out += shape(roughRect(x, 26, 6, 26, seed + x, 0.6, 5), C.parchment, 1.3) + line(`M${x + 3},28 v22`, 0.6);
+      out += shape(roughRect(48, 26, 6, 14, seed + 9, 0.6, 5), C.parchment, 1.3) + line(roughLine(48, 44, 56, 52, seed + 11, 1), 1.2);
+      out += shape(roughRect(8, 52, 48, 5, seed + 3, 0.6, 6), C.stone, 1.3);
+      return out;
+    },
+    ancientLibrary(seed) {
+      const r = rand(seed);
+      let out = "";
+      for (const y of [14, 30, 46]) {
+        out += line(roughLine(9, y + 12, 55, y + 12, seed + y, 0.5), 2, C.wood);
+        let x = 10;
+        while (x < 52) {
+          const w = 3 + r() * 3;
+          const h = 8 + r() * 4;
+          const fill = [C.oxblood, C.slate, C.moss, C.ochre, C.wood][Math.floor(r() * 5)];
+          out += shape(`M${f(x)},${y + 12} v${f(-h)} h${f(w)} v${f(h)}Z`, fill, 0.9);
+          x += w + 0.6;
+          if (r() < 0.12) x += 4;
+        }
+      }
+      out += line(roughLine(9, 10, 9, 58, seed, 0.5), 2, C.wood) + line(roughLine(55, 10, 55, 58, seed + 1, 0.5), 2, C.wood);
+      return out;
+    },
+    portal(seed) {
+      let out = `<ellipse cx="32" cy="32" rx="19" ry="23" fill="${C.ink}"/>`;
+      out += `<ellipse cx="32" cy="32" rx="19" ry="23" fill="none" stroke="${C.oxblood}" stroke-width="4"/>`;
+      out += `<path d="M32,14 q12,8 2,18 q-10,8 0,18 M24,20 q10,4 4,12" fill="none" stroke="${C.lava}" stroke-width="2" stroke-linecap="round"/>`;
+      for (let i = 0; i < 6; i++) {
+        const a = i / 6 * Math.PI * 2;
+        out += line(`M${f(32 + Math.cos(a) * 22)},${f(32 + Math.sin(a) * 26)} l${f(Math.cos(a) * 5)},${f(Math.sin(a) * 5)}`, 1.4, C.oxblood);
+      }
+      return out;
+    },
+    golemForge(seed) {
+      let out = shape("M12,40 h26 l-4,6 h-18Z", C.slate, 1.5) + shape(roughRect(18, 46, 12, 10, seed, 0.5, 4), C.slate, 1.3);
+      out += shape(roughRect(40, 18, 16, 20, seed + 1, 0.7, 5), C.stone, 1.5);
+      out += `<rect x="43" y="25" width="3" height="3" fill="${C.ochre}"/><rect x="50" y="25" width="3" height="3" fill="${C.ochre}"/>`;
+      out += shape(roughRect(38, 38, 20, 18, seed + 2, 0.7, 5), C.stone, 1.5);
+      out += torch(14, 22, seed);
+      return out;
+    },
+    hoard(seed) {
+      return coins(seed, 14) + sleepingWyrm(seed);
+    },
+    emptyHoard(seed) {
+      return coins(seed, 4) + rubble(seed + 3, 3, 49);
+    },
+    forest(seed) {
+      return FEATURE_ART.forest(seed);
+    }
+  };
+  function coins(seed, n) {
+    const r = rand(seed);
+    let out = `<path d="M8,57 q24,-${n} 48,0Z" fill="${C.ochre}" stroke="${C.ink}" stroke-width="1.4"/>`;
+    for (let i = 0; i < n; i++) {
+      out += `<ellipse cx="${f(12 + r() * 40)}" cy="${f(50 + r() * 6)}" rx="2.6" ry="1.4" fill="${C.ochreLight}" stroke="${C.ink}" stroke-width="0.7"/>`;
+    }
+    return out;
+  }
+  function sleepingWyrm() {
+    return shape("M12,44 q-4,-18 14,-22 q16,-3 24,8 q6,8 -2,12 q-8,4 -14,-2 q-6,-5 -12,2Z", C.oxblood, 1.6) + line("M22,28 q3,2 6,0", 1.4) + // a closed eye
+    shape("M14,26 l-4,-8 l8,5Z M26,22 l2,-9 l4,8Z", C.oxblood, 1.2) + line("M48,40 q8,2 8,10 q-6,-2 -10,2", 1.6, C.ink) + `<text x="36" y="18" font-family="Metamorphous, serif" font-size="8" fill="${C.ink}">z</text><text x="42" y="12" font-family="Metamorphous, serif" font-size="6" fill="${C.ink}">z</text>`;
+  }
+  var FEATURE_ART = {
+    cave: (seed) => ROOM_ART.cavern(seed),
+    ruins(seed) {
+      return shape(roughRect(16, 30, 8, 24, seed, 0.7, 5), C.stone, 1.4) + shape("M16,30 l3,-6 l5,4Z", C.stone, 1.2) + shape(roughRect(36, 46, 16, 7, seed + 1, 0.7, 5), C.stone, 1.4) + rubble(seed + 2, 4, 50) + stalactites(seed + 3, 2);
+    },
+    forest(seed) {
+      const r = rand(seed);
+      let out = "";
+      for (const [x, h] of [[16, 30], [33, 36], [48, 28]]) {
+        out += line(roughLine(x, 57, x, 57 - h, seed + x, 0.6), 2.4, C.wood);
+        const cy = 57 - h;
+        out += shape(`M${x - 10},${cy + 6} q-2,-12 ${8 + r() * 3},-12 q4,-6 9,0 q8,2 5,12 q-10,5 -22,0Z`, C.moss, 1.4);
+      }
+      out += line("M8,57 q6,-4 10,0 M40,57 q5,-5 9,0", 1, C.moss);
+      return out;
+    },
+    crystal(seed) {
+      const r = rand(seed);
+      let out = "";
+      for (let i = 0; i < 5; i++) {
+        const x = 12 + i * 10 + r() * 3;
+        const h = 14 + r() * 22;
+        const w = 4 + r() * 3;
+        const tilt = (r() - 0.5) * 8;
+        out += shape(`M${f(x - w)},57 L${f(x - w + tilt * 0.3)},${f(57 - h * 0.7)} L${f(x + tilt)},${f(57 - h)} L${f(x + w + tilt * 0.3)},${f(57 - h * 0.7)} L${f(x + w)},57Z`, i % 2 ? C.slate : C.crystal, 1.3);
+        out += line(`M${f(x + tilt * 0.5)},${f(57 - h + 4)} v${f(h * 0.5)}`, 0.8, C.parchment);
+      }
+      out += stalactites(seed + 5, 3);
+      return out;
+    },
+    mine(seed) {
+      let out = line(roughLine(6, 55, 58, 55, seed, 0.6), 1.6, C.wood) + line("M10,57 v-3 M22,57 v-3 M34,57 v-3 M46,57 v-3", 1.2, C.wood);
+      out += shape("M16,36 h28 l-4,14 h-20Z", C.wood, 1.6);
+      out += `<circle cx="24" cy="52" r="3.4" fill="${C.slate}" stroke="${C.ink}" stroke-width="1.2"/><circle cx="37" cy="52" r="3.4" fill="${C.slate}" stroke="${C.ink}" stroke-width="1.2"/>`;
+      out += shape("M18,36 q4,-7 8,-2 q4,-6 9,0 q4,-5 8,2Z", C.ochre, 1.2);
+      out += line(roughLine(48, 14, 54, 34, seed + 2, 0.5), 2, C.wood) + shape("M42,16 q7,-6 16,0 q-8,-2 -16,0Z", C.slate, 1.2);
+      return out;
+    },
+    tunnel(seed) {
+      let out = "";
+      for (let i = 0; i < 3; i++) out += line(roughLine(18 + i * 7, 14, 24 + i * 7, 44, seed + i, 0.8), 1.8, C.ink);
+      return out + rubble(seed + 4, 5, 49);
+    },
+    volcanic(seed) {
+      let out = `<path d="M26,4 L22,18 L30,30 L24,44 L32,60 L40,60 L34,44 L40,30 L32,18 L36,4Z" fill="${C.ink}"/>`;
+      out += line("M30,10 L27,20 L33,30 L28,44 L35,58", 1.2, C.lava);
+      return out;
+    },
+    grotto(seed) {
+      let out = ROOM_ART.cavern(seed);
+      const r = rand(seed + 3);
+      for (let i = 0; i < 5; i++) {
+        const x = 12 + r() * 40;
+        const y = 18 + r() * 26;
+        const s = 2.5 + r() * 2.5;
+        out += `<path d="M${f(x)},${f(y - s)} L${f(x + s * 0.3)},${f(y - s * 0.3)} L${f(x + s)},${f(y)} L${f(x + s * 0.3)},${f(y + s * 0.3)} L${f(x)},${f(y + s)} L${f(x - s * 0.3)},${f(y + s * 0.3)} L${f(x - s)},${f(y)} L${f(x - s * 0.3)},${f(y - s * 0.3)}Z" fill="${C.ochreLight}" stroke="${C.ink}" stroke-width="0.7"/>`;
+      }
+      out += shape("M44,56 v-7 M38,49 q6,-8 12,0Z", C.moss, 1.2);
+      return out;
+    },
+    gasChamber(seed) {
+      return ROOM_ART.cavern(seed) + shape(roughRect(26, 50, 12, 6, seed, 0.6, 4), C.stoneDark, 1.2) + line("M30,48 q-3,-6 2,-10 M35,48 q4,-6 -1,-12", 1.2, C.ink);
+    },
+    wyrd(seed) {
+      let d = "M32,32";
+      for (let i = 1; i < 28; i++) {
+        const a = i * 0.55;
+        d += ` L${f(32 + Math.cos(a) * i * 0.75)},${f(32 + Math.sin(a) * i * 0.75)}`;
+      }
+      return stalactites(seed, 3) + line(d, 1.6, C.oxblood) + `<circle cx="32" cy="32" r="2" fill="${C.moss}"/>`;
+    },
+    river: () => "",
+    magma: () => "",
+    lake: () => ""
+  };
+  var LAIR_ART = {
+    S2(seed) {
+      return shape("M12,24 l7,-4 l7,4 v26 l-3,6 h-8 l-3,-6Z", C.slate, 1.5) + shape("M36,30 l12,-6 l8,14 l-12,6Z", C.slate, 1.5) + shape("M38,30 l7,-3 l7,3 v20 l-2,5 h-8 l-2,-5Z", C.ink, 1.2) + `<circle cx="42.5" cy="38" r="1.4" fill="${C.lava}"/><circle cx="47.5" cy="38" r="1.4" fill="${C.lava}"/>` + skull(20, 52, 0.8);
+    },
+    SA(seed) {
+      let out = "";
+      for (const [x, s] of [[18, 1], [42, 0.85]]) {
+        out += `<g transform="translate(${x},40) scale(${s})">` + shape("M-11,0 L0,-14 L11,0Z", C.wood, 1.4) + shape(roughRect(-9, 0, 18, 14, seed + x, 0.5, 5), C.stone, 1.4) + shape("M-3,14 v-7 h6 v7Z", C.ink, 1) + "</g>";
+      }
+      return out + line("M30,56 q2,-6 0,-10 q-2,-4 1,-8", 1, C.stoneDark);
+    },
+    SK(seed) {
+      let out = shape("M24,56 v-26 q8,-10 16,0 v26Z", C.oxblood, 1.6) + shape(roughRect(22, 44, 20, 6, seed, 0.5, 5), C.stone, 1.3);
+      out += line(roughLine(10, 10, 10, 56, seed + 1, 0.5), 1.6, C.wood) + shape("M10,12 h10 l-3,6 l3,6 h-10Z", C.slate, 1.1);
+      out += line(roughLine(54, 10, 54, 56, seed + 2, 0.5), 1.6, C.wood) + shape("M54,12 h-10 l3,6 l-3,6 h10Z", C.slate, 1.1);
+      return out + skull(32, 26, 0.7);
+    },
+    S10(seed) {
+      return FOUND_ART.golemForge(seed);
+    },
+    SQ(seed) {
+      return FOUND_ART.hoard(seed);
+    },
+    C9(seed) {
+      let out = "";
+      const hex = (cx, cy) => {
+        let d = "";
+        for (let i = 0; i < 6; i++) {
+          const a = Math.PI / 6 + i * Math.PI / 3;
+          d += `${i ? "L" : "M"}${f(cx + Math.cos(a) * 6)},${f(cy + Math.sin(a) * 6)}`;
+        }
+        return shape(`${d}Z`, C.ochre, 1.1);
+      };
+      for (const [cx, cy] of [[22, 22], [32, 28], [42, 22], [22, 34], [42, 34], [32, 40], [32, 16]]) out += hex(cx, cy);
+      return out + `<circle cx="32" cy="28" r="2" fill="${C.ink}"/>`;
+    },
+    CJ(seed) {
+      return shape("M12,52 q20,-14 40,0 q-20,8 -40,0Z", C.wood, 1.5) + line("M16,50 l6,-4 M28,47 l2,-5 M40,48 l4,-4", 1, C.ink) + `<ellipse cx="26" cy="30" rx="3" ry="2" fill="${C.ochre}" stroke="${C.ink}"/><ellipse cx="38" cy="30" rx="3" ry="2" fill="${C.ochre}" stroke="${C.ink}"/><circle cx="26" cy="30" r="1" fill="${C.ink}"/><circle cx="38" cy="30" r="1" fill="${C.ink}"/>`;
+    },
+    CQ(seed, isHome) {
+      if (!isHome) return line("M8,40 q14,-10 24,4 q10,14 24,0", 3, C.oxblood) + line("M10,20 q12,10 22,-2 q8,-8 22,4", 2.4, C.oxblood);
+      return `<ellipse cx="32" cy="32" rx="18" ry="11" fill="${C.ochreLight}" stroke="${C.ink}" stroke-width="2"/><ellipse cx="32" cy="32" rx="4" ry="10" fill="${C.ink}"/>` + line("M14,32 q18,-20 36,0 M14,32 q18,20 36,0", 1.2);
+    },
+    CK(seed) {
+      return `<ellipse cx="32" cy="40" rx="16" ry="10" fill="${C.ink}"/>` + rubble(seed, 6, 50) + line("M22,24 l4,8 M30,20 l2,9 M38,22 l-1,9", 1.6);
+    }
+  };
+  function lairArt(state2, cell, x, y, seed) {
+    const lair = state2 && state2.lairs && state2.lairs[cell.lair];
+    const k = `${x},${y}`;
+    const art = lair && LAIR_ART[lair.entryKey];
+    const body = art ? art(seed, lair.home === k) : LAIR_ART.S2(seed);
+    return body + `<path d="${cavePath(4, 4, 56, 56, seed)}" fill="url(#hatch-red)" opacity="0.5"/>`;
+  }
+  function flowOverlay(cell, seed) {
     let out = "";
-    out += shape("M12,24 l7,-4 l7,4 v26 l-3,6 h-8 l-3,-6Z", C.slate, 1.5);
-    out += shape("M36,30 l12,-6 l8,14 l-12,6Z", C.slate, 1.5);
-    out += shape("M38,30 l7,-3 l7,3 v20 l-2,5 h-8 l-2,-5Z", C.ink, 1.2);
-    out += `<circle cx="42.5" cy="38" r="1.4" fill="${C.lava}"/><circle cx="47.5" cy="38" r="1.4" fill="${C.lava}"/>`;
-    out += skull(20, 52, 0.8);
-    out += `<path d="${cavePath(4, 4, 56, 56, seed)}" fill="url(#hatch-red)" opacity="0.55"/>`;
+    if (cell.liquid === "water" || cell.flooded) {
+      out += `<path d="${cavePath(6, 6, 52, 52, seed)}" fill="${C.moss}" opacity="0.62"/>`;
+      for (const y of [22, 34, 46]) out += line(`M14,${y} q4,-3 8,0 q4,3 8,0 q4,-3 8,0 q4,3 8,0`, 1.1, C.floor);
+    } else if (cell.liquid === "lava") {
+      out += `<path d="${cavePath(6, 6, 52, 52, seed)}" fill="${C.lava}" opacity="0.85"/>`;
+      out += line(roughLine(12, 24, 52, 30, seed, 2, 6), 1.2) + line(roughLine(14, 44, 50, 40, seed + 1, 2, 6), 1.2);
+      out += line("M20,34 q4,-4 8,0 M36,22 q3,-3 6,0", 1.4, C.ochreLight);
+    }
+    if (cell.gas) {
+      const color = { poison: C.moss, flammable: C.ochre, blinding: C.parchment }[cell.gas];
+      const r = rand(seed + 77);
+      for (let i = 0; i < 9; i++) {
+        const cx = 12 + r() * 40;
+        const cy = 12 + r() * 40;
+        out += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(5 + r() * 5)}" fill="${color}" opacity="0.45" stroke="${C.ink}" stroke-width="0.6" stroke-dasharray="2 2"/>`;
+      }
+    }
     return out;
   }
   function cellBase(cell, x, y) {
     const seed = seedOf(x, y);
-    return cavity(seed, cell.type === "lair" || cell.type === "cavern" ? "cave" : "room");
+    const cave = cell.type === "lair" || cell.type === "cavern" || cell.type === "crystal";
+    return cavity(seed, cave ? "cave" : "room");
   }
-  function cellDetail(cell, x, y) {
+  function cellDetail(cell, x, y, state2 = null) {
     const seed = seedOf(x, y);
-    if (cell.type === "lair") return lairArt(cell, seed);
-    if (cell.type === "cavern") return ROOM_ART.cavern(seed);
-    const art = ROOM_ART[cell.room];
-    return art ? art(seed) : placeholderArt(cell.room);
+    let out;
+    if (cell.type === "lair") out = lairArt(state2, cell, x, y, seed);
+    else if (cell.type === "cavern" || cell.type === "crystal") out = (FEATURE_ART[cell.feature] || FEATURE_ART.cave)(seed);
+    else {
+      const art = ROOM_ART[cell.room] || FOUND_ART[cell.room];
+      out = art ? art(seed) : placeholderArt(cell.room);
+      if (cell.bridge) out = `<rect x="6" y="40" width="52" height="16" fill="${C.moss}" opacity="0.6"/>` + out;
+    }
+    return out + flowOverlay(cell, seed);
+  }
+  function artefactMark() {
+    return `<g transform="translate(13,13) rotate(-35)">` + shape("M-1.6,-11 h3.2 v15 h-3.2Z", C.slate, 1) + shape("M-5,4 h10 v2.4 h-10Z", C.ochre, 1) + shape("M-1.4,6.4 h2.8 v5 h-2.8Z", C.wood, 1) + "</g>";
   }
   function placeholderArt(room) {
     return `<text x="32" y="36" text-anchor="middle" font-family="Metamorphous, serif" font-size="9">${room}</text>`;
   }
   function roomIcon(roomId) {
     const seed = seedOf(roomId.length, roomId.charCodeAt(0));
-    const art = ROOM_ART[roomId];
+    const art = ROOM_ART[roomId] || FOUND_ART[roomId];
     const body = art ? cavity(seed) + art(seed) : cavity(seed) + placeholderArt(roomId);
     return `<svg viewBox="0 0 64 64" aria-hidden="true">${defs()}<rect width="64" height="64" fill="url(#rock)"/>${body}</svg>`;
   }
@@ -2122,6 +3528,8 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       const w = width / this.view.zoom;
       const h = height / this.view.zoom;
       this.svg.setAttribute("viewBox", `${this.view.cx - w / 2} ${this.view.cy - h / 2} ${w} ${h}`);
+      const depths = this.svg.querySelector("#depths");
+      if (depths) depths.setAttribute("transform", `translate(${this.view.cx - w / 2},0)`);
     }
     zoomBy(factor, around) {
       const z = Math.min(3, Math.max(0.25, this.view.zoom * factor));
@@ -2139,7 +3547,7 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       if (!width || !height) return;
       const xs = squares.map((p) => p.x);
       const ys = squares.map((p) => p.y);
-      const x0 = Math.min(...xs) * S - 70;
+      const x0 = Math.min(...xs) * S - 60;
       const x1 = (Math.max(...xs) + 1) * S + 20;
       const y0 = Math.min(-0.6, Math.min(...ys)) * S - 10;
       const y1 = (Math.max(...ys) + 1) * S + 20;
@@ -2253,12 +3661,11 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       for (let gx = left + 20; gx < right; gx += 37) {
         out.push(`<path d="M${gx},-4 l-3,-9 M${gx + 3},-4 l1,-11 M${gx + 6},-4 l4,-8" stroke="${C.moss}" stroke-width="1.5" fill="none" stroke-linecap="round"/>`);
       }
-      let depthLabels = "";
-      for (let y = 0; y < (q1 + 1) * PAGE_H; y++) {
-        depthLabels += `<text x="${left - 14}" y="${y * S + S / 2 + 6}" text-anchor="end" class="depth-n">${y + 1}</text>`;
+      const rows = (q1 + 1) * PAGE_H;
+      let depthLabels = `<rect x="0" y="${-S * 1.4}" width="40" height="${rows * S + S * 1.4}" fill="${C.parchment}" opacity="0.88"/><path d="M40,${-S * 1.4}V${rows * S}" stroke="${C.ink}" stroke-width="1.5"/><text x="20" y="-12" text-anchor="middle" class="depth-h">Depth</text>`;
+      for (let y = 0; y < rows; y++) {
+        depthLabels += `<text x="20" y="${y * S + S / 2 + 7}" text-anchor="middle" class="depth-n">${y + 1}</text>`;
       }
-      out.push(`<text x="${left - 14}" y="${-12}" text-anchor="end" class="depth-h">Depth</text>`);
-      out.push(depthLabels);
       const entries = Object.entries(state2.cells).map(([k, cell]) => ({ ...parseKey(k), cell }));
       for (const { x, y, cell } of entries) {
         out.push(`<g transform="translate(${x * S},${y * S})" class="${cell.flooded ? "flooded" : ""}">${cellBase(cell, x, y)}</g>`);
@@ -2270,10 +3677,12 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
           out.push(`<g transform="translate(${x * S},${y * S})">${verticalOpening(link, seedOf(x, y, 2))}</g>`);
         }
       }
+      const artefactHomes = new Set((state2.artefacts || []).map((a) => a.home));
       for (const { x, y, cell } of entries) {
         let extra = "";
         if (cell.damaged) extra += `<path d="M12,12 L52,52 M52,12 L12,52" stroke="${C.oxblood}" stroke-width="3"/>`;
-        out.push(`<g transform="translate(${x * S},${y * S})">${cellDetail(cell, x, y)}${extra}</g>`);
+        if (artefactHomes.has(key(x, y))) extra += artefactMark();
+        out.push(`<g transform="translate(${x * S},${y * S})">${cellDetail(cell, x, y, state2)}${extra}</g>`);
       }
       if (!state2.combat) {
         for (const [k, h] of Object.entries(state2.housing)) {
@@ -2310,6 +3719,7 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
         }
       }
       out.push(`<g id="hover" visibility="hidden"><path d="${roughRect(2, 2, 60, 60, 11, 1, 10)}" fill="none" stroke="${C.ink}" stroke-width="1.6" opacity="0.6"/></g>`);
+      out.push(`<g id="depths" pointer-events="none">${depthLabels}</g>`);
       this.svg.innerHTML = out.join("");
       this.applyView();
       if (this.hover) {
@@ -2463,16 +3873,25 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       <button data-do="gameover" class="big">See the reckoning</button>`;
       return;
     }
+    if (state.pending) return renderPending(el);
     if (state.phase === "explore") {
-      const digs = explorableSquares(state).map((p) => `<button class="dig" data-dig="${p.x},${p.y}">\u26CF ${esc(digLabel(p))}</button>`).join("");
-      el.innerHTML = `<h2>Explore</h2>
+      const squares = explorableSquares(state);
+      const digs = squares.map((p) => `<button class="dig" data-dig="${p.x},${p.y}">\u26CF ${esc(digLabel(p))}</button>`).join("");
+      el.innerHTML = squares.length ? `<h2>Explore</h2>
       <p>Your miners are ready. <b>Tap one of the dashed <span class="ochre">ochre</span> squares on the map</b>,
       or choose a direction below. A card is then drawn to show what they find.</p>
-      <div class="digs">${digs}</div>`;
+      <div class="digs">${digs}</div>` : `<h2>Explore</h2><p>Water, fire or foes hem the hold in: there is no rock left to dig from.
+      Drain a square, clear a lair or build a Corridor across water next turn.</p>
+      <button class="big" data-do="skipExplore">Carry on without digging \u27F6</button>`;
       return;
     }
     if (state.phase === "combat") return renderCombat(el);
     renderManage(el);
+  }
+  function renderPending(el) {
+    const p = state.pending;
+    const options = chooseOptions(state).map((o) => `<button class="choice" data-choose="${esc(o.id)}">${esc(o.label)}</button>`).join("");
+    el.innerHTML = p.kind === "artefact" ? `<h2>House the artefact</h2><p>Choose a unit room. Every Troop that musters from it fights with +${p.bonus} STR.</p><div class="digs">${options}</div>` : `<h2>The abandoned room</h2><p>Choose what this room once was. It's yours, free, and doesn't count as this turn's build.</p><div class="digs">${options}</div>`;
   }
   function renderCombat(el) {
     const c = state.combat;
@@ -2491,6 +3910,7 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     <div class="troops">${troops}</div>
     <h3>Foes</h3><ul class="foes">${foes}</ul>
     <button class="big" data-do="endRound">End round \u27F6</button>
+    ${canWithdraw(state) ? '<button data-do="withdraw" class="wide">Withdraw: leave the foes in their lairs</button>' : ""}
     <h3>This fight</h3><ul class="log">${recent}</ul>`;
   }
   function renderManage(el) {
@@ -2531,7 +3951,10 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
         ${[1, 5].map((n) => `<button data-recruit="${x},${y},${u},${n}" ${!connected || h.count + n > h.capacity || UNITS[u].cost.diamonds * n > state.res.diamonds || h.count && h.unit !== u ? "disabled" : ""}>+${n}</button>`).join("")}</span>`).join("") || "<small>nothing to recruit here yet</small>"}
     </div>`;
     }).join("");
+    const places = holdActions(state).map((a) => `<button class="place" data-hold="${a.type},${a.x},${a.y}" ${a.disabled ? "disabled" : ""}>
+      ${esc(a.label)} <small>${a.disabled ? esc(a.disabled) : esc(costText(a.cost))}</small></button>`).join("");
     el.innerHTML = `
+    ${places ? `<section class="active"><h2>Places in the hold</h2><div class="places">${places}</div></section>` : ""}
     <section class="${ph === "trade" ? "active" : "past"}"><h2>Trade</h2>${tradeHtml}</section>
     <section class="${buildOpen ? "active" : "past"}"><h2>Build</h2>${buildOpen ? buildHtml : '<p class="done-note">Building is past for this turn.</p>'}</section>
     <section class="active"><h2>Recruit</h2>${recruitHtml}</section>
@@ -2555,8 +3978,15 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
   }
   function roomName(cell) {
     if (!cell) return "the rock";
-    if (cell.type === "cavern") return "an empty cavern";
-    if (cell.type === "lair") return "a lair";
+    if (cell.type === "lair") {
+      const lair = state.lairs[cell.lair];
+      return lair ? `the ${lair.foe}\u2019s lair` : "a lair";
+    }
+    if (cell.type === "cavern" || cell.type === "crystal") {
+      const f2 = FEATURES[cell.feature];
+      if (cell.feature === "wyrd" && cell.wyrd) return cell.wyrd;
+      return f2 && cell.feature !== "cave" ? f2.name : "an empty cavern";
+    }
     const d = roomDef(cell);
     return d ? d.name : cell.room;
   }
@@ -2582,6 +4012,14 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       <span>${c.joker ? "\u2605" : esc(c.rank)}</span><span class="pip">${c.joker ? "" : SUITS[c.suit].symbol}</span></div>
     <div><b>${esc(cardLongName(id))}</b> \u2014 ${esc(m.title)}
       <p class="quote">\u201C${esc(m.text)}\u201D <small>p. ${m.page}</small></p></div>`;
+    for (const d of state.lastDraws || []) {
+      const dc = parseCard(d.card);
+      el.innerHTML += `<div class="extra-draw"><div class="playing-card small ${dc.color === "red" ? "red" : ""}">
+      <span>${esc(dc.rank)}</span><span class="pip">${SUITS[dc.suit].symbol}</span></div>
+      <div><b>${esc(d.table)}: ${esc(d.name)}</b>
+      <p class="quote">\u201C${esc(d.text)}\u201D <small>p. ${d.page}</small></p>
+      <p class="hint">Not automated yet: apply it by hand if you like.</p></div></div>`;
+    }
   }
   function renderUnits() {
     const rows = Object.entries(state.housing).filter(([, h]) => h.count).map(([k, h]) => {
@@ -2612,13 +4050,23 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     if (!cell) {
       html += " \xB7 solid rock";
     } else if (cell.type === "lair") {
-      const e = SPADES[cell.lair.entry];
-      html += ` \xB7 <b>${esc(e.name)}</b> (lair, ${cardLabel(cell.lair.card)})<p class="quote">\u201C${esc(e.text)}\u201D <small>p. ${e.page}</small></p>`;
+      const lair = state.lairs[cell.lair];
+      if (lair) {
+        const pc = parseCard(lair.card);
+        const e = (pc.suit === "C" ? CLUBS : SPADES)[pc.rank];
+        html += ` \xB7 <b>${esc(lair.name)}</b>: ${esc(lair.foe)}, ${lair.str} STR <small>(${cardLabel(lair.card)})</small>
+        <p class="quote">\u201C${esc(e.text)}\u201D <small>p. ${e.page}</small></p>`;
+      }
     } else {
-      const d = roomDef(cell);
+      const d = roomDef(cell) || FEATURES[cell.feature];
       html += ` \xB7 <b>${esc(roomName(cell))}</b>${cell.found ? ` <small>(${cardLabel(cell.found.card)})</small>` : ""}`;
       if (d) html += `<p class="quote">\u201C${esc(d.text)}\u201D <small>p. ${d.page}</small></p>`;
-      if (!isConnected(state, c.x, c.y)) html += '<p class="warn">Disconnected from the Entrance.</p>';
+      if (cell.liquid) html += `<p class="warn">Flooded with ${cell.liquid}: impassable to dwarves until drained (${cell.liquid === "lava" ? "20\u2666" : "5\u2666"}).</p>`;
+      if (cell.gas) html += `<p class="warn">${esc(GASES[cell.gas].name)}: ${esc(GASES[cell.gas].text)}</p>`;
+      if (cell.damaged) html += '<p class="warn">Damaged: no function until repaired.</p>';
+      const arts = (state.artefacts || []).filter((a) => a.home === key(c.x, c.y));
+      if (arts.length) html += `<p>Houses a Long lost artefact: +${arts.reduce((n, a) => n + a.bonus, 0)} STR to its Troops.</p>`;
+      if (cell.type !== "crystal" && !isConnected(state, c.x, c.y) && !cell.liquid && !cell.gas) html += '<p class="warn">Disconnected from the Entrance.</p>';
     }
     if (state.combat) {
       for (const e of state.combat.enemies.filter((q) => q.x === c.x && q.y === c.y)) html += `<p><span class="foe">${esc(e.name)}</span> ${e.str} STR</p>`;
@@ -2630,10 +4078,10 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
   function showTip(target) {
     const tip = $("#tip");
     const i = target.dataset.ref;
-    const ref = state.chronicle[i] && state.chronicle[i].ref;
-    if (!ref) return;
-    tip.innerHTML = `<b>${esc(ref.title || "")}</b>${ref.card ? ` <span class="${parseCard(ref.card).color === "red" ? "red" : ""}">${esc(cardLabel(ref.card))}</span>` : ""}
-    <p class="quote">\u201C${esc(ref.quote || "")}\u201D</p><small>DELVE, p. ${ref.page}</small>`;
+    const ref2 = state.chronicle[i] && state.chronicle[i].ref;
+    if (!ref2) return;
+    tip.innerHTML = `<b>${esc(ref2.title || "")}</b>${ref2.card ? ` <span class="${parseCard(ref2.card).color === "red" ? "red" : ""}">${esc(cardLabel(ref2.card))}</span>` : ""}
+    <p class="quote">\u201C${esc(ref2.quote || "")}\u201D</p><small>DELVE, p. ${ref2.page}</small>`;
     const r = target.getBoundingClientRect();
     tip.hidden = false;
     const tr = tip.getBoundingClientRect();
@@ -2756,6 +4204,11 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       ui.selectedTroop = b.dataset.troop;
       return render();
     }
+    if (b.dataset.choose) return act({ type: "choose", option: b.dataset.choose });
+    if (b.dataset.hold) {
+      const [type, x, y] = b.dataset.hold.split(",");
+      return act({ type, x: +x, y: +y });
+    }
     if (b.dataset.dig) {
       const [x, y] = b.dataset.dig.split(",");
       return act({ type: "explore", x: +x, y: +y });
@@ -2767,6 +4220,10 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
     switch (b.dataset.do) {
       case "endRound":
         return act({ type: "endRound" });
+      case "withdraw":
+        return act({ type: "withdraw" });
+      case "skipExplore":
+        return act({ type: "skipExplore" });
       case "endTurn":
         return act({ type: "endTurn" });
       case "trade-d":
@@ -2812,7 +4269,7 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       const data = JSON.parse(await file.text());
       const s = data.state || data;
       if (!s || s.version !== 1 || !s.cells) throw new Error("not a DELVE save");
-      state = s;
+      state = upgrade(s);
       history = [];
       ui.recorded = !!s.over;
       closeModal();
@@ -2847,7 +4304,7 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
   var map = new MapView($("#map"), { onCellClick, onCellHover });
   var saved = load(SAVE_KEY, null);
   if (saved && saved.state && saved.state.version === 1) {
-    state = saved.state;
+    state = upgrade(saved.state);
     ui.recorded = !!saved.recorded;
     homeView();
     render();

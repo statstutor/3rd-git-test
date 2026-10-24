@@ -5,7 +5,7 @@
 import { PAGE_W, PAGE_H, parseKey, key } from '../engine/grid.js';
 import {
   S, C, defs, cellBase, cellDetail, sideOpening, verticalOpening, seedOf, roughRect, roughLine,
-  troopToken, enemyToken,
+  troopToken, enemyToken, artefactMark,
 } from './art.js';
 
 const HIGHLIGHT = {
@@ -43,6 +43,9 @@ export class MapView {
     const w = width / this.view.zoom;
     const h = height / this.view.zoom;
     this.svg.setAttribute('viewBox', `${this.view.cx - w / 2} ${this.view.cy - h / 2} ${w} ${h}`);
+    // Depth numbers ride along the left edge of the view, wherever the map is panned.
+    const depths = this.svg.querySelector('#depths');
+    if (depths) depths.setAttribute('transform', `translate(${this.view.cx - w / 2},0)`);
   }
 
   zoomBy(factor, around) {
@@ -62,7 +65,7 @@ export class MapView {
     if (!width || !height) return;
     const xs = squares.map((p) => p.x);
     const ys = squares.map((p) => p.y);
-    const x0 = Math.min(...xs) * S - 70; // room for the depth numbers
+    const x0 = Math.min(...xs) * S - 60; // room for the depth numbers
     const x1 = (Math.max(...xs) + 1) * S + 20;
     const y0 = Math.min(-0.6, Math.min(...ys)) * S - 10;
     const y1 = (Math.max(...ys) + 1) * S + 20;
@@ -185,13 +188,14 @@ export class MapView {
       out.push(`<path d="M${gx},-4 l-3,-9 M${gx + 3},-4 l1,-11 M${gx + 6},-4 l4,-8" stroke="${C.moss}" stroke-width="1.5" fill="none" stroke-linecap="round"/>`);
     }
 
-    // depth numbers down the side
-    let depthLabels = '';
-    for (let y = 0; y < (q1 + 1) * PAGE_H; y++) {
-      depthLabels += `<text x="${left - 14}" y="${y * S + S / 2 + 6}" text-anchor="end" class="depth-n">${y + 1}</text>`;
+    // depth numbers: drawn last, pinned to the view's left edge in applyView()
+    const rows = (q1 + 1) * PAGE_H;
+    let depthLabels = `<rect x="0" y="${-S * 1.4}" width="40" height="${rows * S + S * 1.4}" fill="${C.parchment}" opacity="0.88"/>` +
+      `<path d="M40,${-S * 1.4}V${rows * S}" stroke="${C.ink}" stroke-width="1.5"/>` +
+      `<text x="20" y="-12" text-anchor="middle" class="depth-h">Depth</text>`;
+    for (let y = 0; y < rows; y++) {
+      depthLabels += `<text x="20" y="${y * S + S / 2 + 7}" text-anchor="middle" class="depth-n">${y + 1}</text>`;
     }
-    out.push(`<text x="${left - 14}" y="${-12}" text-anchor="end" class="depth-h">Depth</text>`);
-    out.push(depthLabels);
 
     // explored squares: cavities, then openings, then contents
     const entries = Object.entries(state.cells).map(([k, cell]) => ({ ...parseKey(k), cell }));
@@ -205,10 +209,12 @@ export class MapView {
         out.push(`<g transform="translate(${x * S},${y * S})">${verticalOpening(link, seedOf(x, y, 2))}</g>`);
       }
     }
+    const artefactHomes = new Set((state.artefacts || []).map((a) => a.home));
     for (const { x, y, cell } of entries) {
       let extra = '';
       if (cell.damaged) extra += `<path d="M12,12 L52,52 M52,12 L12,52" stroke="${C.oxblood}" stroke-width="3"/>`;
-      out.push(`<g transform="translate(${x * S},${y * S})">${cellDetail(cell, x, y)}${extra}</g>`);
+      if (artefactHomes.has(key(x, y))) extra += artefactMark();
+      out.push(`<g transform="translate(${x * S},${y * S})">${cellDetail(cell, x, y, state)}${extra}</g>`);
     }
 
     // housed units (outside combat): a small tally in the corner
@@ -253,6 +259,7 @@ export class MapView {
 
     // hover outline (moved, not redrawn, on mouse move)
     out.push(`<g id="hover" visibility="hidden"><path d="${roughRect(2, 2, 60, 60, 11, 1, 10)}" fill="none" stroke="${C.ink}" stroke-width="1.6" opacity="0.6"/></g>`);
+    out.push(`<g id="depths" pointer-events="none">${depthLabels}</g>`);
 
     this.svg.innerHTML = out.join('');
     this.applyView();

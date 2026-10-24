@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.2.0 — Every ♣ and ♠ card
+
+**All 26 Natural Formations and Remnants now play by the book** (RULINGS R34–R54):
+- **Liquid:** rivers and magma run to the page edge, lakes take 1D4 squares, and liquid
+  spills into the 2 nearest open squares and pours down shafts. Units drown, and lava
+  damages rooms. Drain for 5♦ (lava 20♦); Corridors can bridge water.
+- **Gas:** poison kills, flammable gas explodes at a Barracks, blinding gas blocks Ranged.
+  Gas rises up shafts.
+- **Foes:** hives, monster villages (which steal from empty rooms), desolate courts, crypts,
+  a raiding small creature that goes home, a large creature that guards its lair until
+  struck, burrowing beasts that tunnel into the hold, golem forges to claim, and a
+  Slumbering Wyrm to steal from. When woken it breathes fire and scorches rooms.
+- **Places:** wishing well, sealed room, buried temple (Cleric), demon portal (rolls at
+  the end of every turn), ancient library, abandoned room (you choose), long lost
+  artefact (+15 STR to a room's Troops), abandoned mine, crystal caverns (♦ each turn),
+  underground forest (+2♥ a turn, or a free room), volcanic shaft.
+- **Skull Dwarves** can be summoned in cleared crypts and may rise again after a fight.
+- **Magic and Wyrd draws** show the entry, but their effects aren't automated yet.
+- **Interface:** a "Places in the hold" list (wish, steal, open, attack, drain, repair),
+  Withdraw in combat, extra draws shown under "The last card", ink drawings for every
+  find, water, lava and gas shading, and depth numbers pinned to the edge of the map.
+- **Saves from 0.1** load and carry on.
+- **Tests:** 60, including one for every card and liquid, gas and lair rules.
+
 ## 0.1.3 — iPhone
 
 - iPhone/iPad file previews (the Files app) show the page without running it, so the game

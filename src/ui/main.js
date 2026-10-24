@@ -3,13 +3,13 @@
 
 import {
   newGame, apply, GameError, capOf, costText, buildableSquares, housingFor, roomDef,
-  scoreBreakdown,
+  scoreBreakdown, holdActions, chooseOptions, upgrade,
 } from '../engine/game.js';
 import { explorableSquares, key, parseKey, depthOf, isConnected } from '../engine/grid.js';
-import { legalTroopMoves, legalTargets, troopName } from '../engine/combat.js';
+import { legalTroopMoves, legalTargets, troopName, canWithdraw } from '../engine/combat.js';
 import { cardLabel, cardLongName, parseCard } from '../engine/deck.js';
 import { chronicleAsText } from '../engine/chronicle.js';
-import { ROOMS, FOUND_ROOMS } from '../data/rooms.js';
+import { ROOMS, FOUND_ROOMS, FEATURES, GASES } from '../data/rooms.js';
 import { UNITS } from '../data/units.js';
 import { SUITS } from '../data/cards.js';
 import { CLUBS, SPADES } from '../data/discoveries.js';
@@ -176,16 +176,29 @@ function renderPhase() {
       <button data-do="gameover" class="big">See the reckoning</button>`;
     return;
   }
+  if (state.pending) return renderPending(el);
   if (state.phase === 'explore') {
-    const digs = explorableSquares(state).map((p) => `<button class="dig" data-dig="${p.x},${p.y}">⛏ ${esc(digLabel(p))}</button>`).join('');
-    el.innerHTML = `<h2>Explore</h2>
+    const squares = explorableSquares(state);
+    const digs = squares.map((p) => `<button class="dig" data-dig="${p.x},${p.y}">⛏ ${esc(digLabel(p))}</button>`).join('');
+    el.innerHTML = squares.length ? `<h2>Explore</h2>
       <p>Your miners are ready. <b>Tap one of the dashed <span class="ochre">ochre</span> squares on the map</b>,
       or choose a direction below. A card is then drawn to show what they find.</p>
-      <div class="digs">${digs}</div>`;
+      <div class="digs">${digs}</div>`
+      : `<h2>Explore</h2><p>Water, fire or foes hem the hold in: there is no rock left to dig from.
+      Drain a square, clear a lair or build a Corridor across water next turn.</p>
+      <button class="big" data-do="skipExplore">Carry on without digging ⟶</button>`;
     return;
   }
   if (state.phase === 'combat') return renderCombat(el);
   renderManage(el);
+}
+
+function renderPending(el) {
+  const p = state.pending;
+  const options = chooseOptions(state).map((o) => `<button class="choice" data-choose="${esc(o.id)}">${esc(o.label)}</button>`).join('');
+  el.innerHTML = p.kind === 'artefact'
+    ? `<h2>House the artefact</h2><p>Choose a unit room. Every Troop that musters from it fights with +${p.bonus} STR.</p><div class="digs">${options}</div>`
+    : `<h2>The abandoned room</h2><p>Choose what this room once was. It's yours, free, and doesn't count as this turn's build.</p><div class="digs">${options}</div>`;
 }
 
 function renderCombat(el) {
@@ -205,6 +218,7 @@ function renderCombat(el) {
     <div class="troops">${troops}</div>
     <h3>Foes</h3><ul class="foes">${foes}</ul>
     <button class="big" data-do="endRound">End round ⟶</button>
+    ${canWithdraw(state) ? '<button data-do="withdraw" class="wide">Withdraw: leave the foes in their lairs</button>' : ''}
     <h3>This fight</h3><ul class="log">${recent}</ul>`;
 }
 
@@ -251,7 +265,11 @@ function renderManage(el) {
     </div>`;
   }).join('');
 
+  const places = holdActions(state).map((a) => `<button class="place" data-hold="${a.type},${a.x},${a.y}" ${a.disabled ? 'disabled' : ''}>
+      ${esc(a.label)} <small>${a.disabled ? esc(a.disabled) : esc(costText(a.cost))}</small></button>`).join('');
+
   el.innerHTML = `
+    ${places ? `<section class="active"><h2>Places in the hold</h2><div class="places">${places}</div></section>` : ''}
     <section class="${ph === 'trade' ? 'active' : 'past'}"><h2>Trade</h2>${tradeHtml}</section>
     <section class="${buildOpen ? 'active' : 'past'}"><h2>Build</h2>${buildOpen ? buildHtml : '<p class="done-note">Building is past for this turn.</p>'}</section>
     <section class="active"><h2>Recruit</h2>${recruitHtml}</section>
@@ -275,8 +293,15 @@ function digLabel(p) {
 
 function roomName(cell) {
   if (!cell) return 'the rock';
-  if (cell.type === 'cavern') return 'an empty cavern';
-  if (cell.type === 'lair') return 'a lair';
+  if (cell.type === 'lair') {
+    const lair = state.lairs[cell.lair];
+    return lair ? `the ${lair.foe}’s lair` : 'a lair';
+  }
+  if (cell.type === 'cavern' || cell.type === 'crystal') {
+    const f = FEATURES[cell.feature];
+    if (cell.feature === 'wyrd' && cell.wyrd) return cell.wyrd;
+    return f && cell.feature !== 'cave' ? f.name : 'an empty cavern';
+  }
   const d = roomDef(cell);
   return d ? d.name : cell.room;
 }
@@ -304,6 +329,14 @@ function renderCard() {
       <span>${c.joker ? '★' : esc(c.rank)}</span><span class="pip">${c.joker ? '' : SUITS[c.suit].symbol}</span></div>
     <div><b>${esc(cardLongName(id))}</b> — ${esc(m.title)}
       <p class="quote">“${esc(m.text)}” <small>p. ${m.page}</small></p></div>`;
+  for (const d of state.lastDraws || []) {
+    const dc = parseCard(d.card);
+    el.innerHTML += `<div class="extra-draw"><div class="playing-card small ${dc.color === 'red' ? 'red' : ''}">
+      <span>${esc(dc.rank)}</span><span class="pip">${SUITS[dc.suit].symbol}</span></div>
+      <div><b>${esc(d.table)}: ${esc(d.name)}</b>
+      <p class="quote">“${esc(d.text)}” <small>p. ${d.page}</small></p>
+      <p class="hint">Not automated yet: apply it by hand if you like.</p></div></div>`;
+  }
 }
 
 function renderUnits() {
@@ -334,13 +367,23 @@ function renderInfo() {
   if (!cell) {
     html += ' · solid rock';
   } else if (cell.type === 'lair') {
-    const e = SPADES[cell.lair.entry];
-    html += ` · <b>${esc(e.name)}</b> (lair, ${cardLabel(cell.lair.card)})<p class="quote">“${esc(e.text)}” <small>p. ${e.page}</small></p>`;
+    const lair = state.lairs[cell.lair];
+    if (lair) {
+      const pc = parseCard(lair.card);
+      const e = (pc.suit === 'C' ? CLUBS : SPADES)[pc.rank];
+      html += ` · <b>${esc(lair.name)}</b>: ${esc(lair.foe)}, ${lair.str} STR <small>(${cardLabel(lair.card)})</small>
+        <p class="quote">“${esc(e.text)}” <small>p. ${e.page}</small></p>`;
+    }
   } else {
-    const d = roomDef(cell);
+    const d = roomDef(cell) || FEATURES[cell.feature];
     html += ` · <b>${esc(roomName(cell))}</b>${cell.found ? ` <small>(${cardLabel(cell.found.card)})</small>` : ''}`;
     if (d) html += `<p class="quote">“${esc(d.text)}” <small>p. ${d.page}</small></p>`;
-    if (!isConnected(state, c.x, c.y)) html += '<p class="warn">Disconnected from the Entrance.</p>';
+    if (cell.liquid) html += `<p class="warn">Flooded with ${cell.liquid}: impassable to dwarves until drained (${cell.liquid === 'lava' ? '20♦' : '5♦'}).</p>`;
+    if (cell.gas) html += `<p class="warn">${esc(GASES[cell.gas].name)}: ${esc(GASES[cell.gas].text)}</p>`;
+    if (cell.damaged) html += '<p class="warn">Damaged: no function until repaired.</p>';
+    const arts = (state.artefacts || []).filter((a) => a.home === key(c.x, c.y));
+    if (arts.length) html += `<p>Houses a Long lost artefact: +${arts.reduce((n, a) => n + a.bonus, 0)} STR to its Troops.</p>`;
+    if (cell.type !== 'crystal' && !isConnected(state, c.x, c.y) && !cell.liquid && !cell.gas) html += '<p class="warn">Disconnected from the Entrance.</p>';
   }
   if (state.combat) {
     for (const e of state.combat.enemies.filter((q) => q.x === c.x && q.y === c.y)) html += `<p><span class="foe">${esc(e.name)}</span> ${e.str} STR</p>`;
@@ -492,6 +535,11 @@ document.addEventListener('click', (e) => {
     ui.selectedTroop = b.dataset.troop;
     return render();
   }
+  if (b.dataset.choose) return act({ type: 'choose', option: b.dataset.choose });
+  if (b.dataset.hold) {
+    const [type, x, y] = b.dataset.hold.split(',');
+    return act({ type, x: +x, y: +y });
+  }
   if (b.dataset.dig) {
     const [x, y] = b.dataset.dig.split(',');
     return act({ type: 'explore', x: +x, y: +y });
@@ -502,6 +550,8 @@ document.addEventListener('click', (e) => {
   }
   switch (b.dataset.do) {
     case 'endRound': return act({ type: 'endRound' });
+    case 'withdraw': return act({ type: 'withdraw' });
+    case 'skipExplore': return act({ type: 'skipExplore' });
     case 'endTurn': return act({ type: 'endTurn' });
     case 'trade-d': return act({ type: 'trade', give: 'diamonds', amount: +$('#give-d').value });
     case 'trade-h': return act({ type: 'trade', give: 'hearts', amount: +$('#give-h').value });
@@ -531,7 +581,7 @@ $('#import-file').addEventListener('change', async (e) => {
     const data = JSON.parse(await file.text());
     const s = data.state || data;
     if (!s || s.version !== 1 || !s.cells) throw new Error('not a DELVE save');
-    state = s;
+    state = upgrade(s);
     history = [];
     ui.recorded = !!s.over;
     closeModal();
@@ -565,7 +615,7 @@ $('#nojs').remove(); // the script is running, so the "not started" notice can g
 const map = new MapView($('#map'), { onCellClick, onCellHover });
 const saved = load(SAVE_KEY, null);
 if (saved && saved.state && saved.state.version === 1) {
-  state = saved.state;
+  state = upgrade(saved.state);
   ui.recorded = !!saved.recorded;
   homeView();
   render();

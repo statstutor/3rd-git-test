@@ -169,4 +169,67 @@ export const FOUND_ROOMS = {
     houses: { units: ['skullDwarf'], capacity: 20 },
     text: 'Forgotten crypts, containing 20 STR of undead. Once cleared, you may summon Skull Dwarves (1 STR) here for 5♦. Crypts can house 20 Skull Dwarves.',
   },
+  forest: {
+    name: 'Underground forest', page: 19,
+    text: 'An underground forest. Cut down for a free room, or keep for 2♥ per turn.',
+  },
+  well: {
+    name: 'Wishing well', page: 21,
+    text: 'Wishing well. Once per turn, you may pay 10♦ to roll 1D2 and draw a card: On 1, consult Good Magic (pages 25 – 26). On 2, consult Bad Magic (pages 27 – 28).',
+  },
+  sealed: {
+    name: 'Sealed room', page: 21, closed: true,
+    text: 'A sealed room with an evil creature or object inside. If this room is opened, draw a card. Consult the Bad Magic table (pages 27 – 28) to determine what you find.',
+  },
+  openedRoom: {
+    name: 'Opened room', page: 21,
+    text: 'The sealed room, now broken open.',
+  },
+  buriedTemple: {
+    name: 'Buried temple', page: 21,
+    houses: { units: ['cleric'], capacity: 1 },
+    text: 'Buried temple. Recruit a cleric here to Roll 1D4 and draw a card. On 1–3, consult Bad Magic. On 4, consult Good Magic. Usable once.',
+  },
+  ancientLibrary: {
+    name: 'Ancient library', page: 22,
+    text: 'Ancient library. For the knowledge contained herein, roll 1D2 and draw a card: On 1, consult Good Magic (pages 25 – 26); On 2, consult Bad Magic (pages 27 – 28).',
+  },
+  portal: {
+    name: 'Demon portal', page: 22,
+    text: 'Demon portal. Roll 1D4 at the end of each turn. On 1, spawn Demons with 20 STR. To destroy the portal, pay 20♦ and sacrifice one of your Clerics, killing them.',
+  },
+  golemForge: {
+    name: 'Golem forge', page: 22,
+    text: 'If the Golems are defeated, this room allows you to recruit Golems at Forges.',
+  },
+  hoard: {
+    name: 'Wyrm’s hoard', page: 22,
+    text: 'Slumbering Wyrm. An ancient dragon sleeps upon its hoard. Once per turn, you may steal 20♦, and roll 1D4. On 1, the Wyrm awakens, destroying the hoard. The Wyrm has 100 STR and Ranged, and rooms it attacks through are damaged.',
+  },
+  emptyHoard: {
+    name: 'Empty hoard', page: 22,
+    text: 'The Wyrm’s lair, its hoard gone.',
+  },
+};
+
+// What the empty-cavern variants are, for hover text. Keyed by cell.feature.
+export const FEATURES = {
+  cave: { name: 'Empty cavern', page: 3, text: 'An empty cavern: a place to build.' },
+  mine: { name: 'Abandoned mine', page: 21, text: 'Abandoned mine. Others have left behind their haul. More for us!' },
+  tunnel: { name: 'Burrowed tunnel', page: 9, text: 'The path a burrowing creature takes is opened up, update your map with the burrowed tunnel.' },
+  volcanic: { name: 'Volcanic shaft', page: 20, text: 'Volcanic shaft, dormant...for now. Draw this all the way down to the bottom of the page.' },
+  river: { name: 'Underground river', page: 19, text: 'An underground river. Draw the river all the way to the closest page edge. Liquid.' },
+  magma: { name: 'Magma flow', page: 19, text: 'Magma flow. Same as the underground river above (4♣), but most likely doesn’t have fish. Liquid.' },
+  lake: { name: 'Underground lake', page: 20, text: 'Underground lake, thankfully monsterless. Liquid.' },
+  gasChamber: { name: 'Gas-filled chamber', page: 19, text: 'Gas-filled chamber.' },
+  grotto: { name: 'Natural magic', page: 19, text: 'Natural magic in cave plants, crystals, or the air itself.' },
+  ruins: { name: 'Cleared lair', page: 21, text: 'Where foes once dwelt; now part of your hold.' },
+  wyrd: { name: 'Wyrd cavern', page: 29, text: 'Something strange from the Wyrd table (pages 29 – 30).' },
+  crystal: { name: 'Crystal cavern', page: 19, text: 'Crystal cavern. At the start of each turn, draw a card before exploring. Gain ♦ equal to its value + cavern’s depth. If the A♦ is drawn, the cavern is destroyed. The grid space cannot be built in but can be passed.' },
+};
+
+export const GASES = {
+  poison: { name: 'Poison gas', text: 'Poison gas: instantly defeats units in affected grid spaces.' },
+  flammable: { name: 'Flammable gas', text: 'Flammable gas: explodes if lit, damages rooms and defeats units. Flammable gas explodes if it reaches a forge, inn, or barracks.' },
+  blinding: { name: 'Blinding gas', text: 'Blinding gas: blocks Ranged.' },
 };
