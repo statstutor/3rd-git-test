@@ -1,6 +1,6 @@
 {
   "name": "delve-browser",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "description": "A browser companion for DELVE: A Solo Map-Drawing Game by Anna Blackwell. Family use only.",
   "type": "module",

@@ -561,6 +561,7 @@ window.addEventListener('unhandledrejection', (e) => toast(`Something went wrong
 
 // ------------------------------------------------------------------ boot
 
+$('#nojs').remove(); // the script is running, so the "not started" notice can go
 const map = new MapView($('#map'), { onCellClick, onCellHover });
 const saved = load(SAVE_KEY, null);
 if (saved && saved.state && saved.state.version === 1) {

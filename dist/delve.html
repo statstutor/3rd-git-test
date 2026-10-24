@@ -222,6 +222,13 @@ th { font: 13px var(--display); }
 .digs { display: flex; flex-wrap: wrap; gap: 5px; }
 .dig { font-size: 14px; }
 header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: var(--ochre); font-weight: 700; }
+
+#nojs {
+  position: absolute; inset: 24px 16px auto; margin: 0 auto; max-width: 440px;
+  background: var(--floor); border: 3px solid var(--ink); border-radius: var(--wob);
+  box-shadow: 4px 5px 0 var(--ink); padding: 14px 18px;
+}
+#nojs p { margin: 6px 0; }
 </style>
 </head>
 <body>
@@ -234,12 +241,19 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
       <button data-do="home" title="Back to the hold">⌂</button>
     </div>
     <div id="info" hidden></div>
+    <div id="nojs">
+      <h2>The game hasn’t started</h2>
+      <p>This viewer is showing the page without running it. On an iPhone or iPad, the Files app
+      and file previews do this.</p>
+      <p>Open the game from its link in Safari instead, or open this file in a desktop browser
+      (Chrome, Safari, Firefox or Edge).</p>
+    </div>
   </section>
   <aside id="side">
     <header>
       <h1>Delve</h1>
       <p class="sub">A Solo Map-Drawing Game · by Anna Blackwell</p>
-      <p class="version">Family edition · version 0.1.2</p>
+      <p class="version">Family edition · version 0.1.3</p>
     </header>
     <div id="status"></div>
     <ol id="tracker"></ol>
@@ -2829,6 +2843,7 @@ header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: v
   });
   window.addEventListener("error", (e) => toast(`Something went wrong: ${e.message}`));
   window.addEventListener("unhandledrejection", (e) => toast(`Something went wrong: ${e.reason}`));
+  $("#nojs").remove();
   var map = new MapView($("#map"), { onCellClick, onCellHover });
   var saved = load(SAVE_KEY, null);
   if (saved && saved.state && saved.state.version === 1) {

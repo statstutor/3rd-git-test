@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3 — iPhone
+
+- iPhone/iPad file previews (the Files app) show the page without running it, so the game
+  looked frozen. The page now says so and points you to the link in Safari.
+- A hosted copy is built as `dist/delve-hosted.html` for playing from a link.
+
 ## 0.1.2 — Taps on the map, version label
 
 - Map squares now respond to the plain click event, which every browser and in-app viewer
