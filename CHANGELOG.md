@@ -1,5 +1,12 @@
 # Changelog
 
+## Music sample (not yet in the game)
+
+- `src/ui/music.js`: dwarven music made live with the Web Audio API, with no recordings. A low
+  choir drone in open fifths, an original melody, anvil and frame-drum work rhythms, horn calls
+  and a long cave echo. Three moods (hall, battle, lament) and two calls (horn, treasure).
+- `dist/music-sample.html`: a page to try it before it goes into the game.
+
 ## 0.2.0 — Every ♣ and ♠ card
 
 **All 26 Natural Formations and Remnants now play by the book** (RULINGS R34–R54):

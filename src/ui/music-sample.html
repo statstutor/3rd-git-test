@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delve Music</title>
+<style>/*FONTS*/
+:root {
+  --ink: #1c1814; --ink-soft: #4a4036; --parchment: #efe3c6; --floor: #f7eed8;
+  --stone-dark: #93846a; --ochre: #c8862a; --ochre-light: #e8b765; --slate: #56636e; --oxblood: #7b2219;
+  --wob: 6px 11px 7px 12px / 11px 6px 12px 7px; --wob2: 12px 5px 10px 6px / 6px 12px 5px 11px;
+  --display: Metamorphous, 'Palatino Linotype', serif; --body: Alegreya, Georgia, serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--parchment); color: var(--ink); font: 17px/1.45 var(--body); }
+main { max-width: 640px; margin: 0 auto; padding-block: 24px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1 { font: 44px/1 var(--display); text-align: center; margin: 0; letter-spacing: 0.05em; text-shadow: 2px 2px 0 var(--ochre); }
+.sub { text-align: center; font-family: var(--display); color: var(--ink-soft); margin: 6px 0 20px; }
+h2 { font: 20px var(--display); margin: 0 0 8px; }
+.panel { background: var(--floor); border: 2px solid var(--ink); border-radius: var(--wob); box-shadow: 3px 4px 0 var(--ink);
+  padding: 14px 16px; margin-bottom: 16px; }
+.panel p { margin: 0 0 8px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+button { font: 17px var(--body); color: var(--ink); background: var(--parchment); border: 2px solid var(--ink);
+  border-radius: var(--wob2); padding: 8px 14px; cursor: pointer; }
+button:hover { background: var(--ochre-light); }
+button:focus-visible { outline: 3px solid var(--slate); outline-offset: 2px; }
+button.mood { flex: 1 1 140px; text-align: left; display: flex; flex-direction: column; justify-content: flex-start; }
+button.mood b { display: block; font: 18px var(--display); }
+button.mood small { color: var(--ink-soft); }
+button.mood[aria-pressed="true"] { background: var(--ochre); box-shadow: 2px 3px 0 var(--ink); }
+button.stop { background: var(--floor); }
+.vol { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.vol input { flex: 1; accent-color: var(--ochre); }
+.now { font-family: var(--display); color: var(--oxblood); min-height: 1.4em; margin-top: 10px; }
+ul { margin: 0; padding-left: 20px; }
+li { margin-bottom: 4px; }
+.hint { color: var(--ink-soft); font-size: 15px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Delve</h1>
+  <p class="sub">Music sample · made live in your browser, no recordings</p>
+
+  <div class="panel">
+    <h2>The moods</h2>
+    <p>Tap one to start. Tap another to change mood; the game would switch on its own.</p>
+    <div class="row">
+      <button class="mood" id="m-hall" data-mood="hall" aria-pressed="false"><b>The Hall</b><small>Building and digging. Slow, humming, hammers in the distance.</small></button>
+      <button class="mood" id="m-battle" data-mood="battle" aria-pressed="false"><b>Battle</b><small>Combat. Drums and anvils at a march, horns driving.</small></button>
+      <button class="mood" id="m-lament" data-mood="lament" aria-pressed="false"><b>Lament</b><small>When the hold falls. A slow song for the fallen.</small></button>
+    </div>
+    <div class="vol"><label for="vol">Volume</label><input id="vol" type="range" min="0" max="1" step="0.05" value="0.7"></div>
+    <p class="now" id="now"></p>
+  </div>
+
+  <div class="panel">
+    <h2>Calls</h2>
+    <p>Short cues that play over the music when something happens.</p>
+    <div class="row">
+      <button id="s-horn" data-sting="horn">Horn: foes found</button>
+      <button id="s-treasure" data-sting="treasure">Chime: treasure</button>
+      <button id="stop" class="stop">Stop the music</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>What you're hearing</h2>
+    <ul>
+      <li><b>Voices:</b> a low choir humming on open fifths and octaves in D minor, like dwarves singing in a great hall.</li>
+      <li><b>The tune:</b> an original slow melody over the drone, sung on "oo".</li>
+      <li><b>Hammers:</b> anvil strikes and a frame drum keeping a work-song beat.</li>
+      <li><b>Horns:</b> long calls, built from raw brass tones.</li>
+      <li><b>The cave:</b> a long, dark echo, as if in a stone hall.</li>
+    </ul>
+    <p class="hint">No sound on an iPhone? Turn the volume up, and if it's still silent, flip the ring/silent switch to ring.</p>
+  </div>
+</main>
+<script>/*JS*/</script>
+</body>
+</html>
