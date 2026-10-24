@@ -19,7 +19,9 @@ const js = await build({
 });
 
 const css = readFileSync('src/ui/style.css', 'utf8');
+const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
 const html = readFileSync('src/ui/index.html', 'utf8')
+  .replace('/*VERSION*/', () => version)
   .replace('/*FONTS*/', () => fonts)
   .replace('/*CSS*/', () => css)
   .replace('/*JS*/', () => js.outputFiles[0].text.replace(/<\/script/gi, '<\\/script'));

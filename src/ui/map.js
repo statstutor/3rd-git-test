@@ -27,8 +27,12 @@ export class MapView {
     svg.addEventListener('pointermove', (e) => this.pointerMove(e));
     svg.addEventListener('pointerup', (e) => this.pointerUp(e));
     svg.addEventListener('pointerleave', () => this.setHover(null));
+    // Square picks use the plain click event, which every browser and in-app viewer sends;
+    // pointer events are only for dragging the map around.
+    svg.addEventListener('click', (e) => this.click(e));
     svg.addEventListener('wheel', (e) => this.wheel(e), { passive: false });
-    new ResizeObserver(() => this.applyView()).observe(svg);
+    if (window.ResizeObserver) new ResizeObserver(() => this.applyView()).observe(svg);
+    else window.addEventListener('resize', () => this.applyView());
   }
 
   // ------------------------------------------------------------ view
@@ -89,7 +93,7 @@ export class MapView {
 
   pointerDown(e) {
     this.drag = { x: e.clientX, y: e.clientY, cx: this.view.cx, cy: this.view.cy, moved: false };
-    this.svg.setPointerCapture(e.pointerId);
+    try { this.svg.setPointerCapture(e.pointerId); } catch { /* some webviews refuse; dragging still works */ }
   }
 
   pointerMove(e) {
@@ -109,10 +113,14 @@ export class MapView {
   }
 
   pointerUp(e) {
-    const d = this.drag;
+    this.justDragged = !!(this.drag && this.drag.moved);
     this.drag = null;
     this.svg.classList.remove('panning');
-    if (d && !d.moved) this.onCellClick(this.cellAt(e));
+  }
+
+  click(e) {
+    if (this.justDragged) { this.justDragged = false; return; }
+    this.onCellClick(this.cellAt(e));
   }
 
   wheel(e) {

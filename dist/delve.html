@@ -221,6 +221,7 @@ th { font: 13px var(--display); }
 
 .digs { display: flex; flex-wrap: wrap; gap: 5px; }
 .dig { font-size: 14px; }
+header .version { margin: 2px 0 0; text-align: center; font-size: 12px; color: var(--ochre); font-weight: 700; }
 </style>
 </head>
 <body>
@@ -238,6 +239,7 @@ th { font: 13px var(--display); }
     <header>
       <h1>Delve</h1>
       <p class="sub">A Solo Map-Drawing Game · by Anna Blackwell</p>
+      <p class="version">Family edition · version 0.1.2</p>
     </header>
     <div id="status"></div>
     <ol id="tracker"></ol>
@@ -2094,8 +2096,10 @@ th { font: 13px var(--display); }
       svg.addEventListener("pointermove", (e) => this.pointerMove(e));
       svg.addEventListener("pointerup", (e) => this.pointerUp(e));
       svg.addEventListener("pointerleave", () => this.setHover(null));
+      svg.addEventListener("click", (e) => this.click(e));
       svg.addEventListener("wheel", (e) => this.wheel(e), { passive: false });
-      new ResizeObserver(() => this.applyView()).observe(svg);
+      if (window.ResizeObserver) new ResizeObserver(() => this.applyView()).observe(svg);
+      else window.addEventListener("resize", () => this.applyView());
     }
     // ------------------------------------------------------------ view
     applyView() {
@@ -2148,7 +2152,10 @@ th { font: 13px var(--display); }
     }
     pointerDown(e) {
       this.drag = { x: e.clientX, y: e.clientY, cx: this.view.cx, cy: this.view.cy, moved: false };
-      this.svg.setPointerCapture(e.pointerId);
+      try {
+        this.svg.setPointerCapture(e.pointerId);
+      } catch {
+      }
     }
     pointerMove(e) {
       if (this.drag) {
@@ -2166,10 +2173,16 @@ th { font: 13px var(--display); }
       this.setHover(this.cellAt(e));
     }
     pointerUp(e) {
-      const d = this.drag;
+      this.justDragged = !!(this.drag && this.drag.moved);
       this.drag = null;
       this.svg.classList.remove("panning");
-      if (d && !d.moved) this.onCellClick(this.cellAt(e));
+    }
+    click(e) {
+      if (this.justDragged) {
+        this.justDragged = false;
+        return;
+      }
+      this.onCellClick(this.cellAt(e));
     }
     wheel(e) {
       e.preventDefault();

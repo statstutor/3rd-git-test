@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2 — Taps on the map, version label
+
+- Map squares now respond to the plain click event, which every browser and in-app viewer
+  sends. Before, a viewer that refused pointer capture could ignore every tap on the map.
+- The version number shows under the title, so it's clear which copy of the file is open.
+- Works without ResizeObserver (older webviews).
+
 ## 0.1.1 — Getting started fix
 
 - The map now zooms to fit your hold and the squares you can dig, on any screen size.
