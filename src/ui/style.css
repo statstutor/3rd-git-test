@@ -207,3 +207,6 @@ th { font: 13px var(--display); }
   #side { overflow: visible; }
   .palette { grid-template-columns: repeat(3, 1fr); }
 }
+
+.digs { display: flex; flex-wrap: wrap; gap: 5px; }
+.dig { font-size: 14px; }

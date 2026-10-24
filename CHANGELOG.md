@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.1 — Getting started fix
+
+- The map now zooms to fit your hold and the squares you can dig, on any screen size.
+  Before, phones and narrow windows opened on empty rock and the game looked frozen.
+- The Explore panel lists every square you can dig as a button ("⛏ East of the Entrance,
+  depth 1"), so you can play without tapping the map.
+- Unexpected errors now show on screen instead of failing silently.
+- Works in older browsers without `structuredClone` (e.g. Safari before 15.4).
+
 ## 0.1.0 — Vertical slice
 
 First playable slice, built after the rules interview (see RULINGS.md).

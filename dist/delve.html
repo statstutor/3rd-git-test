@@ -218,6 +218,9 @@ th { font: 13px var(--display); }
   #side { overflow: visible; }
   .palette { grid-template-columns: repeat(3, 1fr); }
 }
+
+.digs { display: flex; flex-wrap: wrap; gap: 5px; }
+.dig { font-size: 14px; }
 </style>
 </head>
 <body>
@@ -1527,7 +1530,7 @@ th { font: 13px var(--display); }
   }
   function apply(prev, action) {
     if (prev.over) throw new GameError("This hold\u2019s story is over.");
-    const state2 = structuredClone(prev);
+    const state2 = JSON.parse(JSON.stringify(prev));
     switch (action.type) {
       case "explore":
         explore(state2, action);
@@ -2112,6 +2115,21 @@ th { font: 13px var(--display); }
       this.view.zoom = z;
       this.applyView();
     }
+    // Zoom and centre so the given squares (plus the depth numbers and the surface) all show.
+    fit(squares) {
+      const { width, height } = this.svg.getBoundingClientRect();
+      if (!width || !height) return;
+      const xs = squares.map((p) => p.x);
+      const ys = squares.map((p) => p.y);
+      const x0 = Math.min(...xs) * S - 70;
+      const x1 = (Math.max(...xs) + 1) * S + 20;
+      const y0 = Math.min(-0.6, Math.min(...ys)) * S - 10;
+      const y1 = (Math.max(...ys) + 1) * S + 20;
+      this.view.zoom = Math.max(0.35, Math.min(1.8, width / (x1 - x0), height / (y1 - y0)));
+      this.view.cx = (x0 + x1) / 2;
+      this.view.cy = (y0 + y1) / 2;
+      this.applyView();
+    }
     centreOn(x, y) {
       this.view.cx = (x + 0.5) * S;
       this.view.cy = (y + 0.5) * S;
@@ -2322,6 +2340,7 @@ th { font: 13px var(--display); }
       throw e;
     }
     if (action.type === "build") ui.buildRoom = null;
+    if (action.type === "explore" || action.type === "endTurn") homeView();
     if (state.phase !== "combat") ui.selectedTroop = null;
     else if (ui.selectedTroop && !state.combat.troops.some((t) => t.id === ui.selectedTroop && !t.acted)) {
       ui.selectedTroop = nextTroop();
@@ -2418,9 +2437,11 @@ th { font: 13px var(--display); }
       return;
     }
     if (state.phase === "explore") {
+      const digs = explorableSquares(state).map((p) => `<button class="dig" data-dig="${p.x},${p.y}">\u26CF ${esc(digLabel(p))}</button>`).join("");
       el.innerHTML = `<h2>Explore</h2>
-      <p>Choose an unexplored square next to your hold (marked in <span class="ochre">ochre</span>) and the miners will dig.
-      A card is drawn to see what they find.</p>`;
+      <p>Your miners are ready. <b>Tap one of the dashed <span class="ochre">ochre</span> squares on the map</b>,
+      or choose a direction below. A card is then drawn to show what they find.</p>
+      <div class="digs">${digs}</div>`;
       return;
     }
     if (state.phase === "combat") return renderCombat(el);
@@ -2496,6 +2517,14 @@ th { font: 13px var(--display); }
     if (gh) gh.oninput = () => {
       $("#get-d").textContent = Math.floor(Math.max(0, gh.value) / 2);
     };
+  }
+  function digLabel(p) {
+    const around = [[-1, 0, "East of"], [1, 0, "West of"], [0, -1, "Below"], [0, 1, "Above"]];
+    for (const [dx, dy, word] of around) {
+      const cell = state.cells[key(p.x + dx, p.y + dy)];
+      if (cell && cell.type !== "lair") return `${word} ${roomName(cell).replace(/^an? /, "the ")}, depth ${depthOf(p.y)}`;
+    }
+    return `Depth ${depthOf(p.y)}`;
   }
   function roomName(cell) {
     if (!cell) return "the rock";
@@ -2657,9 +2686,9 @@ th { font: 13px var(--display); }
     render();
   }
   function homeView() {
-    map.view.zoom = 1.5;
-    const halfW = map.svg.getBoundingClientRect().width / map.view.zoom / 2;
-    map.centreOn(Math.min(3.5, (halfW - 60) / 64 - 0.5), Math.max(2.2, state.stats.maxDepth - 1));
+    const squares = Object.keys(state.cells).map(parseKey);
+    if (state.phase === "explore") squares.push(...explorableSquares(state));
+    map.fit(squares);
   }
   function showScores() {
     modal(`<h2>Hall of records</h2>${scoresTable()}
@@ -2699,6 +2728,10 @@ th { font: 13px var(--display); }
     if (b.dataset.troop) {
       ui.selectedTroop = b.dataset.troop;
       return render();
+    }
+    if (b.dataset.dig) {
+      const [x, y] = b.dataset.dig.split(",");
+      return act({ type: "explore", x: +x, y: +y });
     }
     if (b.dataset.recruit) {
       const [x, y, unit, n] = b.dataset.recruit.split(",");
@@ -2781,6 +2814,8 @@ th { font: 13px var(--display); }
       render();
     }
   });
+  window.addEventListener("error", (e) => toast(`Something went wrong: ${e.message}`));
+  window.addEventListener("unhandledrejection", (e) => toast(`Something went wrong: ${e.reason}`));
   var map = new MapView($("#map"), { onCellClick, onCellHover });
   var saved = load(SAVE_KEY, null);
   if (saved && saved.state && saved.state.version === 1) {

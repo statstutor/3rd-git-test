@@ -67,6 +67,7 @@ function act(action) {
     throw e;
   }
   if (action.type === 'build') ui.buildRoom = null;
+  if (action.type === 'explore' || action.type === 'endTurn') homeView();
   if (state.phase !== 'combat') ui.selectedTroop = null;
   else if (ui.selectedTroop && !state.combat.troops.some((t) => t.id === ui.selectedTroop && !t.acted)) {
     ui.selectedTroop = nextTroop();
@@ -176,9 +177,11 @@ function renderPhase() {
     return;
   }
   if (state.phase === 'explore') {
+    const digs = explorableSquares(state).map((p) => `<button class="dig" data-dig="${p.x},${p.y}">⛏ ${esc(digLabel(p))}</button>`).join('');
     el.innerHTML = `<h2>Explore</h2>
-      <p>Choose an unexplored square next to your hold (marked in <span class="ochre">ochre</span>) and the miners will dig.
-      A card is drawn to see what they find.</p>`;
+      <p>Your miners are ready. <b>Tap one of the dashed <span class="ochre">ochre</span> squares on the map</b>,
+      or choose a direction below. A card is then drawn to show what they find.</p>
+      <div class="digs">${digs}</div>`;
     return;
   }
   if (state.phase === 'combat') return renderCombat(el);
@@ -258,6 +261,16 @@ function renderManage(el) {
   const gh = $('#give-h');
   if (gd) gd.oninput = () => { $('#get-h').textContent = Math.max(0, Math.floor(gd.value)) * 2; };
   if (gh) gh.oninput = () => { $('#get-d').textContent = Math.floor(Math.max(0, gh.value) / 2); };
+}
+
+// "East of the Barracks, depth 1"
+function digLabel(p) {
+  const around = [[-1, 0, 'East of'], [1, 0, 'West of'], [0, -1, 'Below'], [0, 1, 'Above']];
+  for (const [dx, dy, word] of around) {
+    const cell = state.cells[key(p.x + dx, p.y + dy)];
+    if (cell && cell.type !== 'lair') return `${word} ${roomName(cell).replace(/^an? /, 'the ')}, depth ${depthOf(p.y)}`;
+  }
+  return `Depth ${depthOf(p.y)}`;
 }
 
 function roomName(cell) {
@@ -428,11 +441,11 @@ function startGame() {
   render();
 }
 
-// Frame the hold with the depth numbers in view.
+// Frame the whole hold, and the squares you can dig next, whatever the screen size.
 function homeView() {
-  map.view.zoom = 1.5;
-  const halfW = map.svg.getBoundingClientRect().width / map.view.zoom / 2;
-  map.centreOn(Math.min(3.5, (halfW - 60) / 64 - 0.5), Math.max(2.2, state.stats.maxDepth - 1));
+  const squares = Object.keys(state.cells).map(parseKey);
+  if (state.phase === 'explore') squares.push(...explorableSquares(state));
+  map.fit(squares);
 }
 
 function showScores() {
@@ -478,6 +491,10 @@ document.addEventListener('click', (e) => {
   if (b.dataset.troop) {
     ui.selectedTroop = b.dataset.troop;
     return render();
+  }
+  if (b.dataset.dig) {
+    const [x, y] = b.dataset.dig.split(',');
+    return act({ type: 'explore', x: +x, y: +y });
   }
   if (b.dataset.recruit) {
     const [x, y, unit, n] = b.dataset.recruit.split(',');
@@ -537,6 +554,10 @@ document.addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
   if (e.key === 'Escape') { ui.buildRoom = null; closeModal(); render(); }
 });
+
+// Never fail silently: show unexpected errors on screen.
+window.addEventListener('error', (e) => toast(`Something went wrong: ${e.message}`));
+window.addEventListener('unhandledrejection', (e) => toast(`Something went wrong: ${e.reason}`));
 
 // ------------------------------------------------------------------ boot
 

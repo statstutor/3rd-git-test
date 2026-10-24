@@ -92,7 +92,7 @@ export function costText(cost) {
 
 export function apply(prev, action) {
   if (prev.over) throw new GameError('This hold’s story is over.');
-  const state = structuredClone(prev);
+  const state = JSON.parse(JSON.stringify(prev)); // plain data; works in older browsers too
   switch (action.type) {
     case 'explore': explore(state, action); break;
     case 'trade': trade(state, action); break;

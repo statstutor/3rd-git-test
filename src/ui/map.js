@@ -52,6 +52,22 @@ export class MapView {
     this.applyView();
   }
 
+  // Zoom and centre so the given squares (plus the depth numbers and the surface) all show.
+  fit(squares) {
+    const { width, height } = this.svg.getBoundingClientRect();
+    if (!width || !height) return;
+    const xs = squares.map((p) => p.x);
+    const ys = squares.map((p) => p.y);
+    const x0 = Math.min(...xs) * S - 70; // room for the depth numbers
+    const x1 = (Math.max(...xs) + 1) * S + 20;
+    const y0 = Math.min(-0.6, Math.min(...ys)) * S - 10;
+    const y1 = (Math.max(...ys) + 1) * S + 20;
+    this.view.zoom = Math.max(0.35, Math.min(1.8, width / (x1 - x0), height / (y1 - y0)));
+    this.view.cx = (x0 + x1) / 2;
+    this.view.cy = (y0 + y1) / 2;
+    this.applyView();
+  }
+
   centreOn(x, y) {
     this.view.cx = (x + 0.5) * S;
     this.view.cy = (y + 0.5) * S;
