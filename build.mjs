@@ -29,3 +29,14 @@ const html = readFileSync('src/ui/index.html', 'utf8')
 mkdirSync('dist', { recursive: true });
 writeFileSync('dist/delve.html', html);
 console.log(`dist/delve.html — ${(html.length / 1024).toFixed(0)} KB`);
+
+// The same page without its document wrapper, for publishing as a hosted link
+// (the host supplies <html>, <head>, <body> and the meta tags).
+const hosted = html
+  .replace(/<!doctype html>\s*/i, '')
+  .replace(/<\/?html[^>]*>\s*/gi, '')
+  .replace(/<\/?head>\s*/gi, '')
+  .replace(/<\/?body>\s*/gi, '')
+  .replace(/<meta charset="utf-8">\s*/i, '')
+  .replace(/<meta name="viewport"[^>]*>\s*/i, '');
+writeFileSync('dist/delve-hosted.html', hosted);
