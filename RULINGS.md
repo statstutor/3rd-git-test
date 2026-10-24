@@ -195,6 +195,13 @@ unexplored space to the left or right of an existing room or empty cavern"; Stai
 also be built on an empty cavern next to such a square. Every other room goes on an
 unexplored square or empty cavern orthogonally adjacent to your hold (p. 5).
 
+**R27a. Rooms may be built straight into unexplored rock, as the book says.** [Family]
+p. 5: "Choose an unexplored space (one you haven't drawn in) or an empty cavern." We
+considered a house rule limiting rooms to squares already explored, and chose the book's
+rule. Building into rock skips that square's card draw, but you still explore every turn
+(p. 3: "Each turn, you will choose a new adjacent grid on your map to explore"), so the
+risk is never avoided, only the square the room stands on.
+
 ## Discoveries
 
 **R28. Lairs fight when found.** [Family] Monster village (A♠), crypt (2♠), court
