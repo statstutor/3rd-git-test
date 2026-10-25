@@ -1,13 +1,19 @@
 // The standalone music sample page.
 import { createMusic } from './music.js';
+import { CHANTS } from '../data/chants.js';
 
 const music = createMusic();
-const labels = { hall: 'Now playing: The Hall', battle: 'Now playing: Battle', lament: 'Now playing: Lament' };
 const now = document.getElementById('now');
 
 function show() {
   for (const b of document.querySelectorAll('[data-mood]')) b.setAttribute('aria-pressed', String(music.playing && music.mood === b.dataset.mood));
-  now.textContent = music.playing ? labels[music.mood] : '';
+  const chant = music.playing && CHANTS[music.mood];
+  now.textContent = chant ? `Now chanting: ${chant.title}` : '';
+  document.getElementById('words').hidden = !chant;
+  if (chant) {
+    document.getElementById('words-body').innerHTML = chant.words
+      .map(([dw, en]) => `<tr><td>${dw}</td><td>${en}</td></tr>`).join('');
+  }
 }
 
 document.addEventListener('click', (e) => {

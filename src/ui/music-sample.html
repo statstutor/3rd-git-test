@@ -37,30 +37,38 @@ button.stop { background: var(--floor); }
 ul { margin: 0; padding-left: 20px; }
 li { margin-bottom: 4px; }
 .hint { color: var(--ink-soft); font-size: 15px; }
+.words { width: 100%; border-collapse: collapse; margin-top: 6px; }
+.words td { padding: 4px 6px; border-top: 1px dotted var(--stone-dark); vertical-align: top; }
+.words td:first-child { font-family: var(--display); color: var(--ink); white-space: nowrap; }
+.words td:last-child { font-style: italic; color: var(--ink-soft); }
+@media (max-width: 480px) { .words td:first-child { white-space: normal; } }
 </style>
 </head>
 <body>
 <main>
   <h1>Delve</h1>
-  <p class="sub">Music sample · made live in your browser, no recordings</p>
+  <p class="sub">Dwarven chant · made live in your browser, no recordings</p>
 
   <div class="panel">
     <h2>The moods</h2>
     <p>Tap one to start. Tap another to change mood; the game would switch on its own.</p>
     <div class="row">
-      <button class="mood" id="m-hall" data-mood="hall" aria-pressed="false"><b>The Hall</b><small>Building and digging. Slow, humming, hammers in the distance.</small></button>
-      <button class="mood" id="m-battle" data-mood="battle" aria-pressed="false"><b>Battle</b><small>Combat. Drums and anvils at a march, horns driving.</small></button>
-      <button class="mood" id="m-lament" data-mood="lament" aria-pressed="false"><b>Lament</b><small>When the hold falls. A slow song for the fallen.</small></button>
+      <button class="mood" id="m-hall" data-mood="hall" aria-pressed="false"><b>The Hall</b><small>Building and digging. A plainchant hymn over a growling drone, a slow drum, a distant hammer.</small></button>
+      <button class="mood" id="m-battle" data-mood="battle" aria-pressed="false"><b>Battle</b><small>Combat. A war chant in octaves, drums and anvils, horns, and the band roaring "HU!".</small></button>
+      <button class="mood" id="m-lament" data-mood="lament" aria-pressed="false"><b>Lament</b><small>When the hold falls. One voice sings, the choir answers.</small></button>
     </div>
     <div class="vol"><label for="vol">Volume</label><input id="vol" type="range" min="0" max="1" step="0.05" value="0.7"></div>
     <p class="now" id="now"></p>
+    <div id="words" hidden>
+      <table class="words"><tbody id="words-body"></tbody></table>
+    </div>
   </div>
 
   <div class="panel">
     <h2>Calls</h2>
     <p>Short cues that play over the music when something happens.</p>
     <div class="row">
-      <button id="s-horn" data-sting="horn">Horn: foes found</button>
+      <button id="s-horn" data-sting="horn">War horns: foes found</button>
       <button id="s-treasure" data-sting="treasure">Chime: treasure</button>
       <button id="stop" class="stop">Stop the music</button>
     </div>
@@ -69,13 +77,13 @@ li { margin-bottom: 4px; }
   <div class="panel">
     <h2>What you're hearing</h2>
     <ul>
-      <li><b>Voices:</b> a low choir humming on open fifths and octaves in D minor, like dwarves singing in a great hall.</li>
-      <li><b>The tune:</b> an original slow melody over the drone, sung on "oo".</li>
-      <li><b>Hammers:</b> anvil strikes and a frame drum keeping a work-song beat.</li>
-      <li><b>Horns:</b> long calls, built from raw brass tones.</li>
-      <li><b>The cave:</b> a long, dark echo, as if in a stone hall.</li>
+      <li><b>Plainchant:</b> one melody sung by the whole choir together, in the old Dorian mode, in free rhythm, with long runs of notes on the last syllable of each line.</li>
+      <li><b>Organum:</b> on some lines a second choir sings the same words a fifth below, as medieval monks did.</li>
+      <li><b>Dwarvish:</b> invented words with hard <i>k</i>, <i>d</i> and <i>g</i>, rolled <i>r</i>s and humming <i>m</i>s.</li>
+      <li><b>The Viking edge:</b> a held drone with a throat-singing growl an octave beneath it, frame drums, war horns, and shouts in battle.</li>
+      <li><b>The hall:</b> a long stone echo around everything.</li>
     </ul>
-    <p class="hint">No sound on an iPhone? Turn the volume up, and if it's still silent, flip the ring/silent switch to ring.</p>
+    <p class="hint">These voices are synthesized: expect a choir of stone, not a recording. No sound on an iPhone? Turn the volume up, and if it's still silent, flip the ring/silent switch to ring.</p>
   </div>
 </main>
 <script>/*JS*/</script>

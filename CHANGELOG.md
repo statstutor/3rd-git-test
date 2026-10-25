@@ -1,6 +1,15 @@
 # Changelog
 
-## Music sample (not yet in the game)
+## Music sample 2: dwarven chant (not yet in the game)
+
+- Rebuilt as **chant**: Gregorian-style plainchant (one melody, Dorian mode, free rhythm,
+  melismas, organum a fifth below) sung in invented dwarvish with real consonants, by a deep
+  choir of jittered voices sharing one set of vowel filters.
+- **Viking edge:** a held drone with a throat-singing growl, frame drums, war horns, "HU!"
+  shouts. The lament is call and response: one voice, then the choir.
+- The chants are data in `src/data/chants.js` (words, melodies, translations).
+
+## Music sample 1 (replaced)
 
 - `src/ui/music.js`: dwarven music made live with the Web Audio API, with no recordings. A low
   choir drone in open fifths, an original melody, anvil and frame-drum work rhythms, horn calls
